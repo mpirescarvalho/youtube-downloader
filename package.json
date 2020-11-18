@@ -1,7 +1,6 @@
 {
-  "name": "electron-react-typescript",
+  "name": "electron-youtube-downloader",
   "version": "1.0.0",
-  "description": "An Electron boilerplate including TypeScript, React, Jest and ESLint.",
   "main": "./dist/main.js",
   "scripts": {
     "dev": "npm-run-all -p dev:react electron:serve",
@@ -17,7 +16,7 @@
     "package:dist": "electron-builder --dir"
   },
   "keywords": [],
-  "author": "Diego Fernandes <diego.schell.f@gmail.com>",
+  "author": "Marcelo Carvalho <mpirescarvalho17@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -67,9 +66,13 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
+    "@chakra-ui/react": "^1.0.0",
+    "@emotion/react": "^11.1.1",
+    "@emotion/styled": "^11.0.0",
+    "framer-motion": "^2.9.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "styled-components": "^5.1.1"
+    "typeface-roboto": "^1.1.13"
   },
   "build": {
     "appId": "your.id",
