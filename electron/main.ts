@@ -14,7 +14,8 @@ function createWindow() {
     height: 700,
     frame: false,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      webSecurity: false
     }
   })
 
@@ -48,4 +49,5 @@ app
         .catch((err) => console.log('An error occurred: ', err))
     }
   })
+
 app.allowRendererProcessReuse = true

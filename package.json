@@ -20,6 +20,7 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.9.0",
+    "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-react": "^7.9.4",
     "@babel/preset-typescript": "^7.9.0",
@@ -66,6 +67,8 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
+    "@babel/runtime": "^7.12.5",
+    "@chakra-ui/icons": "^1.0.0",
     "@chakra-ui/react": "^1.0.0",
     "@emotion/react": "^11.1.1",
     "@emotion/styled": "^11.0.0",
@@ -75,12 +78,13 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "svg-url-loader": "^6.0.0",
-    "url-loader": "^4.1.1"
+    "url-loader": "^4.1.1",
+    "youtube-sr": "^2.0.1"
   },
   "build": {
-    "appId": "your.id",
+    "appId": "com.marcelo.electron.youtube.downloader",
     "mac": {
-      "category": "public.app-category.video"
+      "category": "public.app-category.utilities"
     },
     "directories": {
       "output": "packages"
