@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { render } from 'react-dom'
-import { ChakraProvider, Flex } from '@chakra-ui/react'
+import { Box, ChakraProvider, Flex } from '@chakra-ui/react'
 import { Titlebar, Color } from 'custom-electron-titlebar'
 import { Video } from 'youtube-sr'
+import { Scrollbars } from 'react-custom-scrollbars'
 
 import LoadingState from './types/LoadingState'
 
@@ -27,26 +28,31 @@ const App = () => {
 
   return (
     <ChakraProvider theme={theme}>
-      <Flex
-        direction="column"
-        align="center"
-        justify="start"
-        h="100%"
-        background="gray.900"
-        color="gray.100"
-        overflowX="hidden"
-        overflowY="scroll"
-        paddingY="10"
+      <Scrollbars
+        renderThumbVertical={(props) => (
+          <Box {...props} opacity="0.7" bgColor="red.500" borderRadius="8px" />
+        )}
       >
-        <SearchBar
-          w="90%"
-          maxW="1000px"
-          marginBottom="8"
-          onResult={setVideos}
-        />
+        <Flex
+          direction="column"
+          align="center"
+          justify="start"
+          minH="100%"
+          background="gray.900"
+          color="gray.100"
+          overflowX="hidden"
+          paddingY="10"
+        >
+          <SearchBar
+            w="90%"
+            maxW="1000px"
+            marginBottom="8"
+            onResult={setVideos}
+          />
 
-        <VideoList width="90%" maxW="1000px" videos={videos.data} />
-      </Flex>
+          <VideoList width="90%" maxW="1000px" videos={videos.data} />
+        </Flex>
+      </Scrollbars>
     </ChakraProvider>
   )
 }
