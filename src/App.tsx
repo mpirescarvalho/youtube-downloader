@@ -13,6 +13,8 @@ import icon from './assets/icon.svg'
 import VideoList from './components/VideoList'
 import SearchBar from './components/SearchBar'
 
+import 'focus-visible/dist/focus-visible'
+
 new Titlebar({
   backgroundColor: Color.fromHex(theme.colors.gray[800]),
   titleHorizontalAlignment: 'left',

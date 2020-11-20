@@ -1,15 +1,33 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React from 'react'
-import { Flex, Image, Box, Text, Avatar } from '@chakra-ui/react'
+import React, { useState } from 'react'
+import {
+  Flex,
+  Image,
+  Text,
+  Avatar,
+  Spacer,
+  HStack,
+  IconButton,
+  Box
+} from '@chakra-ui/react'
+import { DownloadIcon } from '@chakra-ui/icons'
 import { Video } from 'youtube-sr'
 
 import { formatNumber } from '../utils'
+
+import Dropdown from './Dropdown'
 
 interface VideoItemProps {
   video: Video
 }
 
 const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
+  const [loadingDownloadOptions, setLoadingDownloadOptions] = useState(true)
+  const [showDownloadOptions, setShowDownloadOptions] = useState(false)
+  const [quality, setQuality] = useState(0)
+
+  // async function loadDownloadOptions() {}
+
   return (
     <Flex
       key={video.id!}
@@ -18,6 +36,8 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
       overflow="hidden"
       align="stretch"
       justify="start"
+      onMouseEnter={() => setShowDownloadOptions(true)}
+      onMouseLeave={() => setShowDownloadOptions(false)}
     >
       <Image
         src={video.thumbnail.url!}
@@ -30,7 +50,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
       />
 
       <Flex flex="1">
-        <Box>
+        <Flex direction="column" align="start" justify="stretch">
           <Text isTruncated noOfLines={2} fontWeight="bold">
             {video.title}
           </Text>
@@ -55,7 +75,69 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
               {video.channel.name}
             </Text>
           </Flex>
-        </Box>
+
+          <Spacer flex="1" />
+
+          <Box display={showDownloadOptions ? 'block' : 'none'}>
+            <HStack paddingBottom="2" w="100%">
+              <Dropdown
+                w="200px"
+                colorScheme="green"
+                selected={quality}
+                setSelected={setQuality}
+                isLoading={loadingDownloadOptions}
+              >
+                <Box display="flex" flexDirection="row">
+                  <div>MP4</div>
+                  <Spacer />
+                  <div>
+                    <Text marginRight="2" display="inline">
+                      🎥🔊
+                    </Text>
+                    720p
+                  </div>
+                </Box>
+                <Box display="flex" flexDirection="row">
+                  <div>MP3</div>
+                  <Spacer />
+                  <div>
+                    <Text marginRight="2" display="inline">
+                      🔊
+                    </Text>
+                    720p
+                  </div>
+                </Box>
+                <Box display="flex" flexDirection="row">
+                  <div>MP4</div>
+                  <Spacer />
+                  <div>
+                    <Text marginRight="2" display="inline">
+                      🎥🔊
+                    </Text>
+                    360p
+                  </div>
+                </Box>
+                <Box display="flex" flexDirection="row">
+                  <div>MP4</div>
+                  <Spacer />
+                  <div>
+                    <Text marginRight="2" display="inline">
+                      🎥
+                    </Text>
+                    1080p
+                  </div>
+                </Box>
+              </Dropdown>
+
+              <IconButton
+                aria-label="Download"
+                icon={<DownloadIcon />}
+                colorScheme="green"
+                isLoading={loadingDownloadOptions}
+              />
+            </HStack>
+          </Box>
+        </Flex>
       </Flex>
     </Flex>
   )

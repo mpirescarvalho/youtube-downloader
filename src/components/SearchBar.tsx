@@ -28,7 +28,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onResult, ...rest }) => {
       const videoResults = results.filter((result) => result instanceof Video)
 
       setVideos({ data: videoResults as Video[], loading: false })
-      console.log(videoResults)
     } else {
       setVideos({ data: [], loading: false })
     }
@@ -46,7 +45,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onResult, ...rest }) => {
 
       <IconButton
         colorScheme="red"
-        aria-label="Search database"
+        aria-label="Search"
         type="submit"
         icon={<Search2Icon />}
         isLoading={videos.loading}

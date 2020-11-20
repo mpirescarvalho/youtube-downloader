@@ -75,6 +75,7 @@
     "@types/react-custom-scrollbars": "^4.0.7",
     "custom-electron-titlebar": "^3.2.5",
     "file-loader": "^6.2.0",
+    "focus-visible": "^5.2.0",
     "framer-motion": "^2.9.4",
     "react": "^16.13.1",
     "react-custom-scrollbars": "^4.2.1",
