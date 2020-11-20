@@ -31,6 +31,7 @@ const App = () => {
   return (
     <ChakraProvider theme={theme}>
       <Scrollbars
+        id="scroll-container"
         renderThumbVertical={(props) => (
           <Box {...props} opacity="0.7" bgColor="red.500" borderRadius="8px" />
         )}

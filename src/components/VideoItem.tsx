@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Flex,
   Image,
@@ -12,8 +12,10 @@ import {
 } from '@chakra-ui/react'
 import { DownloadIcon } from '@chakra-ui/icons'
 import { Video } from 'youtube-sr'
+import ytdl, { videoFormat } from 'ytdl-core'
 
-import { formatNumber } from '../utils'
+import { formatNumber, filterBetterFormats } from '../utils'
+import useVisibility from '../hooks/useVisibility'
 
 import Dropdown from './Dropdown'
 
@@ -23,21 +25,40 @@ interface VideoItemProps {
 
 const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
   const [loadingDownloadOptions, setLoadingDownloadOptions] = useState(true)
-  const [showDownloadOptions, setShowDownloadOptions] = useState(false)
-  const [quality, setQuality] = useState(0)
+  const [formats, setFormats] = useState<videoFormat[]>([])
+  const [selectedFormat, setSelectedFormat] = useState(0)
 
-  // async function loadDownloadOptions() {}
+  const downloadOptionsLoadTriggered = useRef(false)
+
+  const [isVisible, ref] = useVisibility<HTMLDivElement>()
+
+  useEffect(() => {
+    if (isVisible && !downloadOptionsLoadTriggered.current) {
+      downloadOptionsLoadTriggered.current = true
+      loadDownloadOptions()
+    }
+  }, [isVisible])
+
+  async function loadDownloadOptions() {
+    try {
+      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
+      const info = await ytdl.getInfo(videoUrl)
+      setFormats(filterBetterFormats(info.formats))
+      setLoadingDownloadOptions(false)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   return (
     <Flex
+      ref={ref}
       key={video.id!}
       w="100%"
       height="200px"
       overflow="hidden"
       align="stretch"
       justify="start"
-      onMouseEnter={() => setShowDownloadOptions(true)}
-      onMouseLeave={() => setShowDownloadOptions(false)}
     >
       <Image
         src={video.thumbnail.url!}
@@ -78,65 +99,48 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
 
           <Spacer flex="1" />
 
-          <Box display={showDownloadOptions ? 'block' : 'none'}>
-            <HStack paddingBottom="2" w="100%">
-              <Dropdown
-                w="200px"
-                colorScheme="green"
-                selected={quality}
-                setSelected={setQuality}
-                isLoading={loadingDownloadOptions}
-              >
-                <Box display="flex" flexDirection="row">
-                  <div>MP4</div>
-                  <Spacer />
-                  <div>
-                    <Text marginRight="2" display="inline">
-                      🎥🔊
-                    </Text>
-                    720p
-                  </div>
-                </Box>
-                <Box display="flex" flexDirection="row">
-                  <div>MP3</div>
-                  <Spacer />
-                  <div>
-                    <Text marginRight="2" display="inline">
-                      🔊
-                    </Text>
-                    720p
-                  </div>
-                </Box>
-                <Box display="flex" flexDirection="row">
-                  <div>MP4</div>
-                  <Spacer />
-                  <div>
-                    <Text marginRight="2" display="inline">
-                      🎥🔊
-                    </Text>
-                    360p
-                  </div>
-                </Box>
-                <Box display="flex" flexDirection="row">
-                  <div>MP4</div>
-                  <Spacer />
-                  <div>
-                    <Text marginRight="2" display="inline">
-                      🎥
-                    </Text>
-                    1080p
-                  </div>
-                </Box>
-              </Dropdown>
+          <HStack paddingBottom="2" w="100%">
+            <Dropdown
+              w="200px"
+              colorScheme="green"
+              selected={selectedFormat}
+              setSelected={setSelectedFormat}
+              isLoading={loadingDownloadOptions}
+            >
+              {formats
+                .filter((_, index) => index !== formats.length - 1)
+                .map((format, index) => (
+                  <Box key={index} display="flex" flexDirection="row">
+                    <div>mp4</div>
+                    <Spacer />
+                    <div>
+                      <Text marginRight="2" display="inline">
+                        {format.hasVideo && '🎥'}
+                        {format.hasAudio && '🔊'}
+                      </Text>
+                      {format.qualityLabel}
+                    </div>
+                  </Box>
+                ))}
 
-              <IconButton
-                aria-label="Download"
-                icon={<DownloadIcon />}
-                colorScheme="green"
-                isLoading={loadingDownloadOptions}
-              />
-            </HStack>
-          </Box>
+              <Box display="flex" flexDirection="row">
+                <div>mp3</div>
+                <Spacer />
+                <div>
+                  <Text marginRight="2" display="inline">
+                    🔊
+                  </Text>
+                </div>
+              </Box>
+            </Dropdown>
+
+            <IconButton
+              aria-label="Download"
+              icon={<DownloadIcon />}
+              colorScheme="green"
+              isLoading={loadingDownloadOptions}
+            />
+          </HStack>
         </Flex>
       </Flex>
     </Flex>
