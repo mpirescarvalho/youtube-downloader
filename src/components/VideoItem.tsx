@@ -16,7 +16,7 @@ import ytdl, { videoFormat } from 'ytdl-core'
 
 import { formatNumber, filterBetterFormats } from '../utils'
 import useVisibility from '../hooks/useVisibility'
-import useDownloader from '../contexts/download'
+import useDownloader, { DownloadProgress } from '../contexts/download'
 
 import Dropdown from './Dropdown'
 
@@ -28,12 +28,13 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
   const [loadingDownloadOptions, setLoadingDownloadOptions] = useState(true)
   const [formats, setFormats] = useState<videoFormat[]>([])
   const [selectedFormat, setSelectedFormat] = useState(0)
+  const [progress, setProgress] = useState<DownloadProgress>()
 
   const downloadOptionsLoadTriggered = useRef(false)
 
   const [isVisible, ref] = useVisibility<HTMLDivElement>()
 
-  const { downloading, download } = useDownloader()
+  const { download } = useDownloader()
 
   useEffect(() => {
     if (isVisible && !downloadOptionsLoadTriggered.current) {
@@ -53,8 +54,14 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
     }
   }
 
-  function handleDownloadClick() {
-    download(video, formats[selectedFormat])
+  async function handleDownloadClick() {
+    try {
+      await download(video, formats[selectedFormat], (downloadProgress) =>
+        setProgress(downloadProgress)
+      )
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (
@@ -104,17 +111,15 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
             </Text>
           </Flex>
 
-          {downloading[video.id!] && (
+          {progress && (
             <>
-              <Text size="xs">complete: {downloading[video.id!].complete}</Text>
-              <Text size="xs">error: {downloading[video.id!].error}</Text>
-              <Text size="xs">
-                downloaded: {downloading[video.id!].downloaded}
-              </Text>
-              <Text size="xs">total: {downloading[video.id!].total}</Text>
-              <Text size="xs">percent: {downloading[video.id!].percent}</Text>
-              <Text size="xs">time: {downloading[video.id!].time}</Text>
-              <Text size="xs">timeLeft: {downloading[video.id!].timeLeft}</Text>
+              <Text size="xs">complete: {progress.complete}</Text>
+              <Text size="xs">error: {progress.error}</Text>
+              <Text size="xs">downloaded: {progress.downloaded}</Text>
+              <Text size="xs">total: {progress.total}</Text>
+              <Text size="xs">percent: {progress.percent}</Text>
+              <Text size="xs">time: {progress.time}</Text>
+              <Text size="xs">timeLeft: {progress.timeLeft}</Text>
             </>
           )}
 

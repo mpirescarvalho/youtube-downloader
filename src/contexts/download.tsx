@@ -1,62 +1,66 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext } from 'react'
 import { Video } from 'youtube-sr'
 import ytdl, { videoFormat } from 'ytdl-core'
-import produce from 'immer'
 import path from 'path'
 import os from 'os'
 import fs from 'fs'
 
-interface Downloading {
-  [key: string]: {
-    video: Video
-    complete?: boolean
-    error?: string
-    percent?: number
-    downloaded?: number
-    total?: number
-    time?: number
-    timeLeft?: number
-  }
+export interface DownloadProgress {
+  video: Video
+  complete?: boolean
+  error?: string
+  percent?: number
+  downloaded?: number
+  total?: number
+  time?: number
+  timeLeft?: number
 }
 interface DownloaderData {
-  downloading: Downloading
-  download(video: Video, format: videoFormat): void
+  download(
+    video: Video,
+    format: videoFormat,
+    onProgress: (downloadProgress: DownloadProgress) => void
+  ): Promise<void>
 }
 
 const DownloaderContext = createContext<DownloaderData>({} as DownloaderData)
 
 export const DownloaderProvider: React.FC = ({ children }) => {
-  const [downloading, setDownloading] = useState<Downloading>({})
+  async function download(
+    video: Video,
+    format: videoFormat,
+    onProgress: (downloadProgress: DownloadProgress) => void
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const outputPath = path.join(os.homedir(), 'Desktop')
 
-  async function download(video: Video, format: videoFormat) {
-    const outputPath = path.join(os.homedir(), 'Desktop')
+        const stream = ytdl(video.url!)
 
-    const stream = ytdl(video.url!)
+        stream.pipe(fs.createWriteStream(path.resolve(outputPath, 'video.mp4')))
 
-    setDownloading((prevState) =>
-      produce(prevState, (draft) => {
-        draft[video.id as string] = {
-          video
+        let downloadProgress: DownloadProgress = {
+          video,
+          complete: false,
+          percent: 0,
+          downloaded: 0,
+          total: 0,
+          time: 0,
+          timeLeft: 0
         }
-      })
-    )
 
-    stream.pipe(fs.createWriteStream(path.resolve(outputPath, 'video.mp4')))
+        let starttime = Date.now()
+        stream.once('response', () => {
+          starttime = Date.now()
+        })
 
-    let starttime = Date.now()
-    stream.once('response', () => {
-      starttime = Date.now()
-    })
+        stream.on('progress', (chunkLength, downloaded, total) => {
+          const percent = downloaded / total
+          const downloadedMinutes = (Date.now() - starttime) / 1000 / 60
+          const estimatedDownloadTime =
+            downloadedMinutes / percent - downloadedMinutes
 
-    stream.on('progress', (chunkLength, downloaded, total) => {
-      const percent = downloaded / total
-      const downloadedMinutes = (Date.now() - starttime) / 1000 / 60
-      const estimatedDownloadTime =
-        downloadedMinutes / percent - downloadedMinutes
-
-      setDownloading((prevState) =>
-        produce(prevState, (draft) => {
-          draft[video.id as string] = {
+          downloadProgress = {
             video,
             complete: percent === 1,
             percent,
@@ -65,34 +69,29 @@ export const DownloaderProvider: React.FC = ({ children }) => {
             time: downloadedMinutes,
             timeLeft: estimatedDownloadTime
           }
-        })
-      )
-    })
 
-    stream.on('end', () => {
-      setDownloading((prevState) =>
-        produce(prevState, (draft) => {
-          draft[video.id as string].complete = true
+          onProgress(downloadProgress)
         })
-      )
-    })
 
-    stream.on('error', (err) => {
-      setDownloading((prevState) =>
-        produce(prevState, (draft) => {
-          draft[video.id as string].error = err.toString()
+        stream.on('end', () => {
+          downloadProgress.complete = true
+          onProgress(downloadProgress)
+          resolve()
         })
-      )
+
+        stream.on('error', (err) => {
+          downloadProgress.error = err.toString()
+          onProgress(downloadProgress)
+          reject(err)
+        })
+      } catch (err) {
+        reject(err)
+      }
     })
   }
 
   return (
-    <DownloaderContext.Provider
-      value={{
-        downloading,
-        download
-      }}
-    >
+    <DownloaderContext.Provider value={{ download }}>
       {children}
     </DownloaderContext.Provider>
   )
