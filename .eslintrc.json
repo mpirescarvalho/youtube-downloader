@@ -25,6 +25,7 @@
     "@typescript-eslint"
   ],
   "rules": {
+    "@typescript-eslint/no-non-null-assertion": "off",
     "react/prop-types": "off",
     "space-before-function-paren": "off",
     "no-new": "off",

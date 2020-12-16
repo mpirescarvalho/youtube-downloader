@@ -16,6 +16,7 @@ import ytdl, { videoFormat } from 'ytdl-core'
 
 import { formatNumber, filterBetterFormats } from '../utils'
 import useVisibility from '../hooks/useVisibility'
+import useDownloader from '../contexts/download'
 
 import Dropdown from './Dropdown'
 
@@ -31,6 +32,8 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
   const downloadOptionsLoadTriggered = useRef(false)
 
   const [isVisible, ref] = useVisibility<HTMLDivElement>()
+
+  const { downloading, download } = useDownloader()
 
   useEffect(() => {
     if (isVisible && !downloadOptionsLoadTriggered.current) {
@@ -48,6 +51,10 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
     } catch (err) {
       console.error(err)
     }
+  }
+
+  function handleDownloadClick() {
+    download(video, formats[selectedFormat])
   }
 
   return (
@@ -97,6 +104,20 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
             </Text>
           </Flex>
 
+          {downloading[video.id!] && (
+            <>
+              <Text size="xs">complete: {downloading[video.id!].complete}</Text>
+              <Text size="xs">error: {downloading[video.id!].error}</Text>
+              <Text size="xs">
+                downloaded: {downloading[video.id!].downloaded}
+              </Text>
+              <Text size="xs">total: {downloading[video.id!].total}</Text>
+              <Text size="xs">percent: {downloading[video.id!].percent}</Text>
+              <Text size="xs">time: {downloading[video.id!].time}</Text>
+              <Text size="xs">timeLeft: {downloading[video.id!].timeLeft}</Text>
+            </>
+          )}
+
           <Spacer flex="1" />
 
           <HStack paddingBottom="2" w="100%">
@@ -139,6 +160,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
               icon={<DownloadIcon />}
               colorScheme="green"
               isLoading={loadingDownloadOptions}
+              onClick={handleDownloadClick}
             />
           </HStack>
         </Flex>
