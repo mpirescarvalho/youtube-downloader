@@ -1,78 +1,34 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Flex,
   Image,
   Text,
-  Avatar,
-  Spacer,
-  HStack,
-  IconButton,
-  Box
+  Avatar
 } from '@chakra-ui/react'
-import { DownloadIcon } from '@chakra-ui/icons'
 import { Video } from 'youtube-sr'
-import ytdl, { videoFormat } from 'ytdl-core'
+import { DownloadIcon } from '@chakra-ui/icons'
 
-import { formatNumber, filterBetterFormats } from '../utils'
-import useVisibility from '../hooks/useVisibility'
-import useDownloader, { DownloadProgress } from '../contexts/download'
-
-import Dropdown from './Dropdown'
+import { formatNumber } from '../utils'
 
 interface VideoItemProps {
   video: Video
 }
 
 const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
-  const [loadingDownloadOptions, setLoadingDownloadOptions] = useState(true)
-  const [formats, setFormats] = useState<videoFormat[]>([])
-  const [selectedFormat, setSelectedFormat] = useState(0)
-  const [progress, setProgress] = useState<DownloadProgress>()
-
-  const downloadOptionsLoadTriggered = useRef(false)
-
-  const [isVisible, ref] = useVisibility<HTMLDivElement>()
-
-  const { download } = useDownloader()
-
-  useEffect(() => {
-    if (isVisible && !downloadOptionsLoadTriggered.current) {
-      downloadOptionsLoadTriggered.current = true
-      loadDownloadOptions()
-    }
-  }, [isVisible])
-
-  async function loadDownloadOptions() {
-    try {
-      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
-      const info = await ytdl.getInfo(videoUrl)
-      setFormats(filterBetterFormats(info.formats))
-      setLoadingDownloadOptions(false)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  async function handleDownloadClick() {
-    try {
-      await download(video, formats[selectedFormat], (downloadProgress) =>
-        setProgress(downloadProgress)
-      )
-    } catch (err) {
-      console.error(err)
-    }
-  }
+  const [hover, setHover] = useState(false)
 
   return (
     <Flex
-      ref={ref}
       key={video.id!}
       w="100%"
       height="200px"
       overflow="hidden"
       align="stretch"
       justify="start"
+      cursor="pointer"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
       <Image
         src={video.thumbnail.url!}
@@ -85,10 +41,19 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
       />
 
       <Flex flex="1">
-        <Flex direction="column" align="start" justify="stretch">
-          <Text isTruncated noOfLines={2} fontWeight="bold">
-            {video.title}
-          </Text>
+        <Flex direction="column" align="start" justify="stretch" w="100%">
+          <Flex direction="row" width="100%">
+            <Text flex="1" isTruncated noOfLines={2} fontWeight="bold">
+              {video.title}
+            </Text>
+
+            <DownloadIcon
+              w="5"
+              h="5"
+              marginRight="1"
+              visibility={hover ? 'visible' : 'hidden'}
+            />
+          </Flex>
 
           <Text fontSize="xs" color="gray.400">
             {formatNumber(Number(video.views))} views
@@ -111,63 +76,9 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
             </Text>
           </Flex>
 
-          {progress && (
-            <>
-              <Text size="xs">complete: {progress.complete}</Text>
-              <Text size="xs">error: {progress.error}</Text>
-              <Text size="xs">downloaded: {progress.downloaded}</Text>
-              <Text size="xs">total: {progress.total}</Text>
-              <Text size="xs">percent: {progress.percent}</Text>
-              <Text size="xs">time: {progress.time}</Text>
-              <Text size="xs">timeLeft: {progress.timeLeft}</Text>
-            </>
-          )}
-
-          <Spacer flex="1" />
-
-          <HStack paddingBottom="2" w="100%">
-            <Dropdown
-              w="200px"
-              colorScheme="green"
-              selected={selectedFormat}
-              setSelected={setSelectedFormat}
-              isLoading={loadingDownloadOptions}
-            >
-              {formats
-                .filter((_, index) => index !== formats.length - 1)
-                .map((format, index) => (
-                  <Box key={index} display="flex" flexDirection="row">
-                    <div>mp4</div>
-                    <Spacer />
-                    <div>
-                      <Text marginRight="2" display="inline">
-                        {format.hasVideo && '🎥'}
-                        {format.hasAudio && '🔊'}
-                      </Text>
-                      {format.qualityLabel}
-                    </div>
-                  </Box>
-                ))}
-
-              <Box display="flex" flexDirection="row">
-                <div>mp3</div>
-                <Spacer />
-                <div>
-                  <Text marginRight="2" display="inline">
-                    🔊
-                  </Text>
-                </div>
-              </Box>
-            </Dropdown>
-
-            <IconButton
-              aria-label="Download"
-              icon={<DownloadIcon />}
-              colorScheme="green"
-              isLoading={loadingDownloadOptions}
-              onClick={handleDownloadClick}
-            />
-          </HStack>
+          <Text flex="1" fontSize="xs" color="gray.400" marginTop="3">
+            {video.description}
+          </Text>
         </Flex>
       </Flex>
     </Flex>
