@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { useState } from 'react'
-import {
-  Flex,
-  Image,
-  Text,
-  Avatar
-} from '@chakra-ui/react'
+import { Flex, Image, Text, Avatar, useDisclosure } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { DownloadIcon } from '@chakra-ui/icons'
 
 import { formatNumber } from '../utils'
+import DownloadModal from './DownloadModal'
 
 interface VideoItemProps {
   video: Video
@@ -17,6 +13,7 @@ interface VideoItemProps {
 
 const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
   const [hover, setHover] = useState(false)
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
     <Flex
@@ -27,6 +24,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
       align="stretch"
       justify="start"
       cursor="pointer"
+      onClick={onOpen}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -81,6 +79,12 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
           </Text>
         </Flex>
       </Flex>
+
+      <DownloadModal
+        video={video}
+        isOpen={isOpen}
+        onClose={onClose}
+      />
     </Flex>
   )
 }
