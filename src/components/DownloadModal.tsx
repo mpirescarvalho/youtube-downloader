@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -16,8 +16,11 @@ import {
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { FaVolumeMute, FaVolumeUp, FaVideoSlash, FaVideo } from 'react-icons/fa'
+import ytdl, { videoFormat } from 'ytdl-core'
 
 import Dropdown from './Dropdown'
+import LoadingState from '../types/LoadingState'
+import { filterBetterFormats } from '../utils'
 
 interface DownloadModalProps {
   video: Video
@@ -27,9 +30,39 @@ interface DownloadModalProps {
 
 const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose }) => {
   const [selected, setSelected] = useState(0)
+  const [formats, setFormats] = useState<LoadingState<videoFormat[]>>({
+    data: [],
+    loading: false
+  })
+
+  useEffect(() => {
+    if (isOpen && !formats.loading && formats.data.length === 0) {
+      loadFormats()
+    }
+  }, [isOpen, formats])
+
+  async function loadFormats() {
+    setFormats({ data: [], loading: true })
+    try {
+      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
+      const info = await ytdl.getInfo(videoUrl)
+      if (isOpen) {
+        const data = filterBetterFormats(info.formats)
+        console.log(data)
+        setFormats({ data, loading: false })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  function handleClose() {
+    setFormats({ data: [], loading: false })
+    onClose()
+  }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} isCentered size="lg">
       <ModalOverlay />
       <ModalContent background="gray.900" color="gray.100">
         <ModalHeader>Download Video</ModalHeader>
@@ -61,32 +94,25 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             colorScheme="red"
             selected={selected}
             setSelected={setSelected}
-            isLoading={false}
+            isLoading={formats.loading}
           >
-
-            <Flex direction="row" justify="space-between">
-              <Text>320p mp3</Text>
-              <div>
-                <Icon as={FaVideoSlash} marginRight="2" />
-                <Icon as={FaVolumeUp} />
-              </div>
-            </Flex>
-
-            <Flex direction="row" justify="space-between">
-              <Text>720p mp4</Text>
-              <div>
-                <Icon as={FaVideo} marginRight="2" />
-                <Icon as={FaVolumeMute} />
-              </div>
-            </Flex>
-
-            <Flex direction="row" justify="space-between">
-              <Text>1080p mp4</Text>
-              <div>
-                <Icon as={FaVideo} marginRight="2" />
-                <Icon as={FaVolumeUp} />
-              </div>
-            </Flex>
+            {formats.data.map((format, index) => (
+              <Flex key={index} direction="row" justify="space-between">
+                <Text>{format.container.toUpperCase()} • {format.qualityLabel}</Text>
+                <div>
+                  {format.hasVideo ? (
+                    <Icon as={FaVideo} marginRight="2" />
+                  ) : (
+                    <Icon as={FaVideoSlash} marginRight="2" />
+                  )}
+                  {format.hasAudio ? (
+                    <Icon as={FaVolumeUp} />
+                  ) : (
+                    <Icon as={FaVolumeMute} />
+                  )}
+                </div>
+              </Flex>
+            ))}
           </Dropdown>
 
           <div>

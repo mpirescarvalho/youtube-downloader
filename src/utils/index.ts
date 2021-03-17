@@ -27,10 +27,10 @@ export function formatNumber(num: number): string {
 
 export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
   const result = filterFormats(formats, 'videoandaudio')
+  return result
+  // const audioFormat = chooseFormat(formats, {
+  //   quality: 'highestaudio'
+  // })
 
-  const audioFormat = chooseFormat(formats, {
-    quality: 'highestaudio'
-  })
-
-  return [...result, audioFormat]
+  // return [...result, audioFormat]
 }
