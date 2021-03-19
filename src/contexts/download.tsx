@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useState, useEffect } from 'react'
+import React, { createContext, useContext, useCallback, useState } from 'react'
 import { Video } from 'youtube-sr'
 import ytdl, { videoFormat } from 'ytdl-core'
 import path from 'path'
@@ -90,6 +90,11 @@ export const DownloaderProvider: React.FC = ({ children }) => {
           setDownloads(produce((draft: Downloads) => {
             draft[videoId].progress.complete = true
           }))
+          setTimeout(() => {
+            setDownloads(produce((draft: Downloads) => {
+              delete draft[videoId]
+            }))
+          }, 4000)
           resolve()
         })
 

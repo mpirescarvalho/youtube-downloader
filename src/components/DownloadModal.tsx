@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -12,8 +12,8 @@ import {
   Image,
   Text,
   Icon,
-  HStack,
-  Progress
+  Progress,
+  useToast
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { FaVolumeMute, FaVolumeUp, FaVideoSlash, FaVideo } from 'react-icons/fa'
@@ -39,9 +39,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   const { download } = useDownload()
   const downloadInfo = useDownloadInfo(video.id!)
-  const downloading = useMemo<boolean>(() => !!downloadInfo && !downloadInfo.progress.complete, [downloadInfo])
-
-  useEffect(() => console.log(downloadInfo?.progress), [downloadInfo])
+  const toast = useToast()
 
   useEffect(() => {
     if (isOpen && !formats.loading && formats.data.length === 0) {
@@ -68,8 +66,19 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     onClose()
   }
 
-  function handleDownload() {
-    download(video, formats.data[selected])
+  async function handleDownload() {
+    try {
+      await download(video, formats.data[selected])
+      toast({
+        title: 'Download finished',
+        description: video.title,
+        status: 'success',
+        duration: 4000,
+        isClosable: true
+      })
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (
@@ -98,7 +107,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             {video.title}
           </Text>
 
-          {!!downloadInfo && <Progress value={Math.trunc((downloadInfo?.progress.percent || 0) * 100)} colorScheme="red" hasStripe marginTop="2" />}
+          {!!downloadInfo && <Progress value={Math.trunc(downloadInfo.progress.percent! * 100)} colorScheme="green" marginTop="2" borderRadius="2" />}
         </ModalBody>
 
         <ModalFooter justifyContent="space-between">
@@ -108,7 +117,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             selected={selected}
             setSelected={setSelected}
             isLoading={formats.loading}
-            disabled={downloading}
+            disabled={!!downloadInfo}
           >
             {formats.data.map((format, index) => (
               <Flex key={index} direction="row" justify="space-between">
@@ -134,7 +143,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
               onClick={handleDownload}
               colorScheme="red"
               mr={3}
-              disabled={formats.loading || downloading}
+              disabled={formats.loading || !!downloadInfo}
             >
               Download
             </Button>
