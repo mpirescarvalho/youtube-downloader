@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { useState } from 'react'
-import { Flex, Image, Text, Avatar, useDisclosure } from '@chakra-ui/react'
+import { Flex, Image, Text, Avatar, useDisclosure, Box } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { DownloadIcon } from '@chakra-ui/icons'
 
@@ -28,15 +28,37 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <Image
-        src={video.thumbnail.url!}
-        fit="cover"
+      <Box
         width={{ base: '240px', md: '300px', lg: '360px' }}
-        bgColor="gray.300"
-        borderRadius="md"
+        flexShrink={0}
+        overflow="hidden"
         marginRight="4"
+        borderRadius="md"
+        bgColor="gray.300"
         transition="width 0.6s"
-      />
+        position="relative"
+      >
+        <Image
+          src={video.thumbnail.url!}
+          fit="cover"
+          width="100%"
+          height="100%"
+        />
+
+        <Text
+          background="blackAlpha.800"
+          fontWeight="bold"
+          position="absolute"
+          bottom="1"
+          right="1"
+          fontSize="smaller"
+          borderRadius="md"
+          paddingX="4px"
+          textAlign="center"
+        >
+          {video.durationFormatted}
+        </Text>
+      </Box>
 
       <Flex flex="1">
         <Flex direction="column" align="start" justify="stretch" w="100%">

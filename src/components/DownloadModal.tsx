@@ -13,7 +13,8 @@ import {
   Text,
   Icon,
   Progress,
-  useToast
+  useToast,
+  Box
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { FaVolumeMute, FaVolumeUp, FaVideoSlash, FaVideo } from 'react-icons/fa'
@@ -88,14 +89,28 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
         <ModalHeader>Download Video</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Flex direction="column">
+          <Box position="relative">
             <Image
               src={video.thumbnail.url!}
               fit="cover"
               bgColor="gray.300"
               borderRadius="md"
             />
-          </Flex>
+
+            <Text
+              background="blackAlpha.800"
+              fontWeight="bold"
+              position="absolute"
+              bottom="1"
+              right="1"
+              fontSize="smaller"
+              borderRadius="md"
+              paddingX="4px"
+              textAlign="center"
+            >
+              {video.durationFormatted}
+            </Text>
+          </Box>
 
           <Text
             flex="1"
@@ -117,7 +132,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             selected={selected}
             setSelected={setSelected}
             isLoading={formats.loading}
-            disabled={!!downloadInfo}
+            disabled={formats.loading || !!downloadInfo}
           >
             {formats.data.map((format, index) => (
               <Flex key={index} direction="row" justify="space-between">
