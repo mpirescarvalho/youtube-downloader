@@ -7,13 +7,13 @@ import fs from 'fs'
 import produce from 'immer'
 
 export type DownloadProgress = {
-  complete?: boolean
+  complete: boolean
   error?: string
-  percent?: number
-  downloaded?: number
-  total?: number
-  time?: number
-  timeLeft?: number
+  percent: number
+  downloaded: number
+  total: number
+  time: number
+  timeLeft: number
 }
 
 export type DownloadFunction = (video: Video, format: videoFormat) => Promise<void>;
@@ -70,9 +70,9 @@ export const DownloaderProvider: React.FC = ({ children }) => {
 
         stream.on('progress', (chunkLength, downloaded, total) => {
           const percent = downloaded / total
-          const downloadedMinutes = (Date.now() - starttime) / 1000 / 60
+          const downloadedSeconds = (Date.now() - starttime) / 1000
           const estimatedDownloadTime =
-            downloadedMinutes / percent - downloadedMinutes
+            downloadedSeconds / percent - downloadedSeconds
 
           setDownloads(produce((draft: Downloads) => {
             draft[videoId].progress = {
@@ -80,7 +80,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
               percent,
               downloaded,
               total,
-              time: downloadedMinutes,
+              time: downloadedSeconds,
               timeLeft: estimatedDownloadTime
             }
           }))

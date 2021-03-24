@@ -12,7 +12,6 @@ import {
   Image,
   Text,
   Icon,
-  Progress,
   useToast,
   Box
 } from '@chakra-ui/react'
@@ -24,6 +23,7 @@ import Dropdown from './Dropdown'
 import LoadingState from '../types/LoadingState'
 import { filterBetterFormats } from '../utils'
 import { useDownload, useDownloadInfo } from '../contexts/download'
+import Progress from './Progress'
 
 interface DownloadModalProps {
   video: Video
@@ -122,7 +122,11 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             {video.title}
           </Text>
 
-          {!!downloadInfo && <Progress value={Math.trunc(downloadInfo.progress.percent! * 100)} colorScheme="green" marginTop="2" borderRadius="2" />}
+          {downloadInfo?.progress && (
+            <Box marginTop="2">
+              <Progress {...downloadInfo?.progress} />
+            </Box>
+          )}
         </ModalBody>
 
         <ModalFooter justifyContent="space-between">
@@ -171,7 +175,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
                 color: 'gray.700'
               }}
             >
-              Cancel
+              Close
             </Button>
           </div>
         </ModalFooter>
