@@ -122,11 +122,10 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             {video.title}
           </Text>
 
-          {downloadInfo?.progress && (
-            <Box marginTop="2">
-              <Progress {...downloadInfo?.progress} />
-            </Box>
-          )}
+          <Progress
+            videoId={video.id!}
+            marginTop="2"
+          />
         </ModalBody>
 
         <ModalFooter justifyContent="space-between">

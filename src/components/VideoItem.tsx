@@ -6,6 +6,7 @@ import { DownloadIcon } from '@chakra-ui/icons'
 
 import { formatNumber } from '../utils'
 import DownloadModal from './DownloadModal'
+import Progress from './Progress'
 
 interface VideoItemProps {
   video: Video
@@ -99,6 +100,13 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
           <Text flex="1" fontSize="xs" color="gray.400" marginTop="3">
             {video.description}
           </Text>
+
+          <Progress
+            videoId={video.id!}
+            width="100%"
+            marginTop="3"
+            flexShrink={0}
+          />
         </Flex>
       </Flex>
 
