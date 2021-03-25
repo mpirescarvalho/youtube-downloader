@@ -15,6 +15,7 @@ import SearchBar from './components/SearchBar'
 
 import { DownloaderProvider } from './contexts/download'
 import { VideosProvider } from './contexts/videos'
+import { DownloadModalProvider } from './contexts/downloadModal'
 
 import 'focus-visible/dist/focus-visible'
 
@@ -30,36 +31,38 @@ const App = () => {
     <ChakraProvider theme={theme}>
       <DownloaderProvider>
         <VideosProvider>
-          <Scrollbars
-            id="scroll-container"
-            renderThumbVertical={(props) => (
-              <Box
-                {...props}
-                opacity="0.7"
-                bgColor="red.500"
-                borderRadius="8px"
-              />
-            )}
-          >
-            <Flex
-              direction="column"
-              align="center"
-              justify="start"
-              minH="100%"
-              background="gray.900"
-              color="gray.100"
-              overflowX="hidden"
-              paddingY="10"
+          <DownloadModalProvider>
+            <Scrollbars
+              id="scroll-container"
+              renderThumbVertical={(props) => (
+                <Box
+                  {...props}
+                  opacity="0.7"
+                  bgColor="red.500"
+                  borderRadius="8px"
+                />
+              )}
             >
-              <SearchBar
-                w="90%"
-                maxW="1000px"
-                marginBottom="8"
-              />
+              <Flex
+                direction="column"
+                align="center"
+                justify="start"
+                minH="100%"
+                background="gray.900"
+                color="gray.100"
+                overflowX="hidden"
+                paddingY="10"
+              >
+                <SearchBar
+                  w="90%"
+                  maxW="1000px"
+                  marginBottom="8"
+                />
 
-              <VideoList width="90%" maxW="1000px" />
-            </Flex>
-          </Scrollbars>
+                <VideoList width="90%" maxW="1000px" />
+              </Flex>
+            </Scrollbars>
+          </DownloadModalProvider>
         </VideosProvider>
       </DownloaderProvider>
     </ChakraProvider>
