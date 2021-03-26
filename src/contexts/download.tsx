@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useCallback, useState, useMemo, useEffect } from 'react'
 import { useThrottledCallback } from 'use-debounce'
 import { Video } from 'youtube-sr'
-import ytdl, { videoFormat } from 'ytdl-core'
-import path from 'path'
-import os from 'os'
-import fs from 'fs'
+import { videoFormat } from 'ytdl-core'
 import produce from 'immer'
+
+import { downloadVideo } from '../utils/downloader'
 
 export type DownloadProgress = {
   complete: boolean
@@ -41,85 +40,29 @@ export const DownloaderProvider: React.FC = ({ children }) => {
   }, 300, { leading: true, trailing: true })
 
   const download: DownloadFunction = useCallback(async (video, format) => {
-    return new Promise((resolve, reject) => {
-      if (!video.id) {
-        reject(new Error('Invalid video id'))
-      }
+    if (!video.id) {
+      throw new Error('Invalid video id')
+    }
 
-      const videoId = video.id!
-
-      try {
-        const outputPath = path.join(os.homedir(), 'Desktop')
-        const stream = ytdl(video.url!)
-        stream.pipe(fs.createWriteStream(path.resolve(outputPath, `${video.title}.mp4`)))
-
-        updateDownloads(draft => {
-          draft[videoId] = {
-            video,
-            format,
-            progress: {
-              complete: false,
-              percent: 0,
-              downloaded: 0,
-              total: 0,
-              time: 0,
-              timeLeft: 0
-            }
-          }
-        })
+    await downloadVideo(video, format, progress => {
+      updateDownloads(draft => {
+        draft[video.id!] = {
+          video,
+          format,
+          progress
+        }
+      })
+      if (progress.complete) {
         updateDownloads.flush()
-
-        let starttime = Date.now()
-        stream.once('response', () => {
-          starttime = Date.now()
-        })
-
-        stream.on('progress', (chunkLength, downloaded, total) => {
-          const percent = downloaded / total
-          const downloadedSeconds = (Date.now() - starttime) / 1000
-          const estimatedDownloadTime =
-            downloadedSeconds / percent - downloadedSeconds
-
-          updateDownloads(draft => {
-            draft[videoId].progress = {
-              complete: percent === 1,
-              percent,
-              downloaded,
-              total,
-              time: downloadedSeconds,
-              timeLeft: estimatedDownloadTime
-            }
-          })
-
-          if (percent === 1) {
-            updateDownloads.flush()
-          }
-        })
-
-        stream.on('end', () => {
-          updateDownloads(draft => {
-            draft[videoId].progress.complete = true
-          })
-          updateDownloads.flush()
-          setTimeout(() => {
-            updateDownloads(draft => {
-              delete draft[videoId]
-            })
-            updateDownloads.flush()
-          }, 4000)
-          resolve()
-        })
-
-        stream.on('error', (err) => {
-          setDownloads(produce((draft: Downloads) => {
-            draft[videoId].progress.error = err.toString()
-          }))
-          reject(err)
-        })
-      } catch (err) {
-        reject(err)
       }
     })
+
+    setTimeout(() => {
+      updateDownloads(draft => {
+        delete draft[video.id!]
+      })
+      updateDownloads.flush()
+    }, 4000)
   }, [setDownloads])
 
   return (
