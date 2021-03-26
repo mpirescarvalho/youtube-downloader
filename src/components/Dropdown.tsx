@@ -8,7 +8,7 @@ import {
   ButtonProps
 } from '@chakra-ui/react'
 
-interface DropdownProps extends ButtonProps {
+export interface DropdownProps extends ButtonProps {
   isLoading?: boolean
   selected: number
   setSelected(index: number): void

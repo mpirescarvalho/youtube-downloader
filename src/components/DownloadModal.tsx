@@ -8,18 +8,15 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Flex,
   Image,
   Text,
-  Icon,
   useToast,
   Box
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
-import { FaVolumeMute, FaVolumeUp, FaVideoSlash, FaVideo } from 'react-icons/fa'
 import ytdl, { videoFormat } from 'ytdl-core'
 
-import Dropdown from './Dropdown'
+import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { filterBetterFormats } from '../utils'
 import { useDownload, useIsDownloading } from '../contexts/download'
@@ -129,32 +126,15 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
         </ModalBody>
 
         <ModalFooter justifyContent="space-between">
-          <Dropdown
-            w="180px"
-            colorScheme="red"
+          <FormatsDropdown
+            formats={formats.data}
             selected={selected}
             setSelected={setSelected}
             isLoading={formats.loading}
             disabled={formats.loading || isDownloading}
-          >
-            {formats.data.map((format, index) => (
-              <Flex key={index} direction="row" justify="space-between">
-                <Text>{format.container.toUpperCase()} • {format.qualityLabel}</Text>
-                <div>
-                  {format.hasVideo ? (
-                    <Icon as={FaVideo} marginRight="2" />
-                  ) : (
-                    <Icon as={FaVideoSlash} marginRight="2" />
-                  )}
-                  {format.hasAudio ? (
-                    <Icon as={FaVolumeUp} />
-                  ) : (
-                    <Icon as={FaVolumeMute} />
-                  )}
-                </div>
-              </Flex>
-            ))}
-          </Dropdown>
+            w="180px"
+            colorScheme="red"
+          />
 
           <div>
             <Button
