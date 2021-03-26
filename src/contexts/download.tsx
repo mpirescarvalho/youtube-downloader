@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback, useState, useMemo, useEffect } from 'react'
+import { useThrottledCallback } from 'use-debounce'
 import { Video } from 'youtube-sr'
 import ytdl, { videoFormat } from 'ytdl-core'
 import path from 'path'
@@ -35,6 +36,10 @@ const DownloaderContext = createContext<DownloaderData>({} as DownloaderData)
 export const DownloaderProvider: React.FC = ({ children }) => {
   const [downloads, setDownloads] = useState<Downloads>({})
 
+  const updateDownloads = useThrottledCallback((updateFunc: (draft: Downloads) => void) => {
+    setDownloads(produce(updateFunc))
+  }, 300, { leading: true, trailing: true })
+
   const download: DownloadFunction = useCallback(async (video, format) => {
     return new Promise((resolve, reject) => {
       if (!video.id) {
@@ -48,7 +53,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
         const stream = ytdl(video.url!)
         stream.pipe(fs.createWriteStream(path.resolve(outputPath, `${video.title}.mp4`)))
 
-        setDownloads(produce((draft: Downloads) => {
+        updateDownloads(draft => {
           draft[videoId] = {
             video,
             format,
@@ -61,7 +66,8 @@ export const DownloaderProvider: React.FC = ({ children }) => {
               timeLeft: 0
             }
           }
-        }))
+        })
+        updateDownloads.flush()
 
         let starttime = Date.now()
         stream.once('response', () => {
@@ -74,7 +80,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
           const estimatedDownloadTime =
             downloadedSeconds / percent - downloadedSeconds
 
-          setDownloads(produce((draft: Downloads) => {
+          updateDownloads(draft => {
             draft[videoId].progress = {
               complete: percent === 1,
               percent,
@@ -83,17 +89,23 @@ export const DownloaderProvider: React.FC = ({ children }) => {
               time: downloadedSeconds,
               timeLeft: estimatedDownloadTime
             }
-          }))
+          })
+
+          if (percent === 1) {
+            updateDownloads.flush()
+          }
         })
 
         stream.on('end', () => {
-          setDownloads(produce((draft: Downloads) => {
+          updateDownloads(draft => {
             draft[videoId].progress.complete = true
-          }))
+          })
+          updateDownloads.flush()
           setTimeout(() => {
-            setDownloads(produce((draft: Downloads) => {
+            updateDownloads(draft => {
               delete draft[videoId]
-            }))
+            })
+            updateDownloads.flush()
           }, 4000)
           resolve()
         })
