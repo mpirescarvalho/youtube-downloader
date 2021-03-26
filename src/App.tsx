@@ -1,11 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { render } from 'react-dom'
 import { Box, ChakraProvider, Flex } from '@chakra-ui/react'
 import { Titlebar, Color } from 'custom-electron-titlebar'
-import { Video } from 'youtube-sr'
 import { Scrollbars } from 'react-custom-scrollbars'
-
-import LoadingState from './types/LoadingState'
 
 import theme from './styles/theme'
 import icon from './assets/icon.svg'
