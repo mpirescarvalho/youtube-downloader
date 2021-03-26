@@ -11,9 +11,15 @@ type FormatsDropdownProps = {
 
 const FormatsDropdown: React.FC<FormatsDropdownProps> = ({ formats, ...props }) => {
   return (
-    <Dropdown {...props}>
+    <Dropdown
+      w="180px"
+      paddingX="16px"
+      colorScheme="red"
+      variant="responsive"
+      {...props}
+    >
       {formats.map((format, index) => (
-        <Flex key={index} direction="row" justify="space-between">
+        <Flex key={index} w="148px" direction="row" justify="space-between" align="center">
           <Text>{format.container.toUpperCase()} • {format.qualityLabel}</Text>
           <div>
             {format.hasVideo ? (

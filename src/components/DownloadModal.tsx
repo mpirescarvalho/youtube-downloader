@@ -132,8 +132,6 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             setSelected={setSelected}
             isLoading={formats.loading}
             disabled={formats.loading || isDownloading}
-            w="180px"
-            colorScheme="red"
           />
 
           <div>

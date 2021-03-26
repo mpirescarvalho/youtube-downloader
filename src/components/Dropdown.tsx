@@ -18,6 +18,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   isLoading,
   selected,
   setSelected,
+  variant,
   children,
   ...rest
 }) => {
@@ -31,6 +32,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
     <Popover
       placement="bottom"
+      variant={variant}
       {...rest}
       isOpen={open}
       onClose={() => setOpen(false)}

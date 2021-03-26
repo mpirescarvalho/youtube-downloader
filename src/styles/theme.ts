@@ -5,6 +5,18 @@ const customTheme = extendTheme({
     body: 'Roboto, system-ui, sans-serif',
     heading: 'Roboto, system-ui, sans-serif',
     mono: 'Menlo, monospace'
+  },
+  components: {
+    Popover: {
+      variants: {
+        responsive: {
+          popper: {
+            maxWidth: 'unset',
+            width: 'unset'
+          }
+        }
+      }
+    }
   }
 })
 
