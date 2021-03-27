@@ -2,7 +2,8 @@ import ytdl, { videoFormat } from 'ytdl-core'
 import { Video } from 'youtube-sr'
 import path from 'path'
 import os from 'os'
-import fs from 'fs'
+import cp from 'child_process'
+import pathToFfmpeg from 'ffmpeg-static'
 
 import { DownloadProgress } from '../contexts/download'
 
@@ -13,10 +14,12 @@ export async function downloadVideo(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const outputPath = path.join(os.homedir(), 'Desktop')
-    const stream = ytdl(video.url!, { format })
-    stream.pipe(
-      fs.createWriteStream(path.resolve(outputPath, `${video.title}.mp4`))
-    )
+    const startTime = Date.now()
+
+    const streamsTracker = {
+      audio: { downloaded: 0, total: Infinity },
+      video: { downloaded: 0, total: Infinity }
+    }
 
     const currentProgress = {
       complete: false,
@@ -27,16 +30,16 @@ export async function downloadVideo(
       timeLeft: 0
     }
 
+    // Tell listeners that download has started
     progressCallback(Object.assign({}, currentProgress))
 
-    let starttime = Date.now()
-    stream.once('response', () => {
-      starttime = Date.now()
-    })
+    const triggerProgress = () => {
+      const total = streamsTracker.audio.total + streamsTracker.video.total
+      const downloaded =
+        streamsTracker.audio.downloaded + streamsTracker.video.downloaded
 
-    stream.on('progress', (chunkLength, downloaded, total) => {
       const percent = downloaded / total
-      const downloadedSeconds = (Date.now() - starttime) / 1000
+      const downloadedSeconds = (Date.now() - startTime) / 1000
       const estimatedDownloadTime =
         downloadedSeconds / percent - downloadedSeconds
 
@@ -50,18 +53,89 @@ export async function downloadVideo(
       })
 
       progressCallback(Object.assign({}, currentProgress))
+    }
+
+    const videoStream = ytdl(video.url!, { format }).on(
+      'progress',
+      (_, downloaded, total) => {
+        streamsTracker.video = { downloaded, total }
+      }
+    )
+
+    const audioStream = ytdl(video.url!, { quality: 'highestaudio' }).on(
+      'progress',
+      (_, downloaded, total) => {
+        streamsTracker.audio = { downloaded, total }
+      }
+    )
+
+    // Start the ffmpeg child process
+    const ffmpegProcess = cp.spawn(
+      pathToFfmpeg,
+      [
+        // Remove ffmpeg's console spamming
+        '-loglevel',
+        '8',
+        '-hide_banner',
+        // Redirect/Enable progress messages
+        '-progress',
+        'pipe:3',
+        // Set inputs
+        '-i',
+        'pipe:4',
+        '-i',
+        'pipe:5',
+        // Map audio & video from streams
+        '-map',
+        '0:a',
+        '-map',
+        '1:v',
+        // Keep encoding
+        '-c:v',
+        'copy',
+        // Define output file
+        path.resolve(outputPath, `${video.title}.mp4`)
+      ],
+      {
+        windowsHide: true,
+        stdio: [
+          /* Standard: stdin, stdout, stderr */
+          'inherit',
+          'inherit',
+          'inherit',
+          /* Custom: pipe:3, pipe:4, pipe:5 */
+          'pipe',
+          'pipe',
+          'pipe'
+        ]
+      }
+    )
+
+    ffmpegProcess.stdio[3]?.on('data', () => {
+      triggerProgress()
     })
 
-    stream.on('end', () => {
-      Object.assign(currentProgress, { complete: true })
+    ffmpegProcess.on('close', () => {
+      Object.assign(currentProgress, {
+        complete: true,
+        percent: 1,
+        downloaded: currentProgress.total
+      })
       progressCallback(Object.assign({}, currentProgress))
       resolve()
     })
 
-    stream.on('error', (err) => {
+    const triggerError = (err: Error) => {
+      ffmpegProcess?.kill('SIGINT')
       Object.assign(currentProgress, { error: err.toString() })
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
-    })
+    }
+
+    audioStream.on('error', triggerError)
+    videoStream.on('error', triggerError)
+
+    audioStream.pipe(ffmpegProcess.stdio[4] as any)
+    videoStream.pipe(ffmpegProcess.stdio[5 as any] as any)
   })
 }

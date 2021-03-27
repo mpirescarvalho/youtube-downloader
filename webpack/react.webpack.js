@@ -40,6 +40,9 @@ module.exports = {
       }
     ]
   },
+  node: {
+    __dirname: true
+  },
   devServer: {
     contentBase: path.join(rootPath, 'dist/renderer'),
     historyApiFallback: true,
