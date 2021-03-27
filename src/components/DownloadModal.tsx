@@ -45,6 +45,10 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     }
   }, [isOpen, formats])
 
+  useEffect(() => {
+    setSelected(0)
+  }, [video])
+
   async function loadFormats() {
     setFormats({ data: [], loading: true })
     try {
