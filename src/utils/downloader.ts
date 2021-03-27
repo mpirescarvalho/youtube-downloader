@@ -4,8 +4,29 @@ import path from 'path'
 import os from 'os'
 import cp from 'child_process'
 import pathToFfmpeg from 'ffmpeg-static'
+import fs from 'fs'
 
 import { DownloadProgress } from '../contexts/download'
+
+function resolveOutputPath(filename: string, ext: string): string {
+  let count = 0
+  const getSuffix = () => {
+    count++
+    if (count > 1) {
+      return ` (${count})`
+    } else {
+      return ''
+    }
+  }
+  const getOutPath = () =>
+    path.resolve(outputDir, `${filename}${getSuffix()}.${ext}`)
+  const outputDir = path.join(os.homedir(), 'Desktop')
+  let outputPath = ''
+  do {
+    outputPath = getOutPath()
+  } while (fs.existsSync(outputPath))
+  return outputPath
+}
 
 export async function downloadVideo(
   video: Video,
@@ -13,7 +34,7 @@ export async function downloadVideo(
   progressCallback: (progress: DownloadProgress) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const outputPath = path.join(os.homedir(), 'Desktop')
+    const outputPath = resolveOutputPath(video.title || 'video', 'mp4')
     const startTime = Date.now()
 
     const streamsTracker = {
@@ -94,7 +115,7 @@ export async function downloadVideo(
         '-c:v',
         'copy',
         // Define output file
-        path.resolve(outputPath, `${video.title}.mp4`)
+        outputPath
       ],
       {
         windowsHide: true,
