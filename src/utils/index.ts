@@ -33,6 +33,7 @@ export function findBestAudioTrack(formats: videoFormat[]): videoFormat | null {
 }
 
 export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
+  const audioTrack = findBestAudioTrack(formats)
   const formatsPushed: string[] = []
   const result = filterFormats(
     formats,
@@ -45,5 +46,8 @@ export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
     }
     return false
   })
+  if (audioTrack) {
+    result.push(audioTrack)
+  }
   return result
 }

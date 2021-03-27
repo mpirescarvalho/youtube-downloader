@@ -4,7 +4,7 @@ import { Video } from 'youtube-sr'
 import { videoFormat } from 'ytdl-core'
 import produce from 'immer'
 
-import { downloadVideo } from '../utils/downloader'
+import { downloadVideo, downloadAudio } from '../utils/downloader'
 
 export type DownloadProgress = {
   complete: boolean
@@ -44,7 +44,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
       throw new Error('Invalid video id')
     }
 
-    await downloadVideo(video, format, progress => {
+    const onProgress = (progress: DownloadProgress) => {
       updateDownloads(draft => {
         draft[video.id!] = {
           video,
@@ -55,7 +55,13 @@ export const DownloaderProvider: React.FC = ({ children }) => {
       if (progress.complete) {
         updateDownloads.flush()
       }
-    })
+    }
+
+    if (format.hasVideo) {
+      await downloadVideo(video, format, onProgress)
+    } else {
+      await downloadAudio(video, format, onProgress)
+    }
 
     setTimeout(() => {
       updateDownloads(draft => {
