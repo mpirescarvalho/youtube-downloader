@@ -20,7 +20,7 @@ function resolveOutputPath(filename: string, ext: string): string {
   }
   const getOutPath = () =>
     path.resolve(outputDir, `${filename}${getSuffix()}.${ext}`)
-  const outputDir = path.join(os.homedir(), 'Desktop')
+  const outputDir = path.join(os.homedir(), 'Downloads')
   let outputPath = ''
   do {
     outputPath = getOutPath()

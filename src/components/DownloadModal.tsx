@@ -11,9 +11,12 @@ import {
   Image,
   Text,
   useToast,
-  Box
+  Box,
+  Icon,
+  Flex
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
+import { FaDownload } from 'react-icons/fa'
 import ytdl, { videoFormat } from 'ytdl-core'
 
 import FormatsDropdown from './FormatsDropdown'
@@ -87,7 +90,12 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     <Modal isOpen={isOpen} onClose={handleClose} isCentered size="lg">
       <ModalOverlay />
       <ModalContent background="gray.900" color="gray.100">
-        <ModalHeader>Download Video</ModalHeader>
+        <ModalHeader>
+          <Flex direction="row" align="center" justify="flex-start">
+            <Icon as={FaDownload} marginRight="3" />
+            Download Video
+          </Flex>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Box position="relative">
