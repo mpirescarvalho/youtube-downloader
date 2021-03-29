@@ -20,7 +20,7 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({ formats, ...props }) 
     >
       {formats.map((format, index) => (
         <Flex key={index} w="148px" direction="row" justify="space-between" align="center">
-          <Text>{format.container.toUpperCase()} • {format.qualityLabel}</Text>
+          <Text>{format.container.toUpperCase()}{format.qualityLabel && ` • ${format.qualityLabel}`}</Text>
           <div>
             {format.hasVideo
               ? <Icon as={FaVideo} marginRight="2" />

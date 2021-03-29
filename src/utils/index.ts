@@ -47,6 +47,7 @@ export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
     return false
   })
   if (audioTrack) {
+    audioTrack.container = 'mp3' as any
     result.push(audioTrack)
   }
   return result
