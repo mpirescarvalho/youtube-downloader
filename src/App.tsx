@@ -37,27 +37,29 @@ const App = () => {
                   opacity="0.7"
                   bgColor="red.500"
                   borderRadius="8px"
+                  zIndex="10"
+                />
+              )}
+              renderView={(props) => (
+                <Flex
+                  direction="column"
+                  align="center"
+                  justify="start"
+                  minH="100%"
+                  background="gray.900"
+                  color="gray.100"
+                  overflowX="hidden"
+                  paddingBottom="8"
+                  {...props}
                 />
               )}
             >
-              <Flex
-                direction="column"
-                align="center"
-                justify="start"
-                minH="100%"
-                background="gray.900"
-                color="gray.100"
-                overflowX="hidden"
-                paddingY="10"
-              >
-                <SearchBar
-                  w="90%"
-                  maxW="1000px"
-                  marginBottom="8"
-                />
+              <SearchBar
+                w="90%"
+                maxW="1000px"
+              />
 
-                <VideoList width="90%" maxW="1000px" />
-              </Flex>
+              <VideoList width="90%" maxW="1000px" />
             </Scrollbars>
           </DownloadModalProvider>
         </VideosProvider>
