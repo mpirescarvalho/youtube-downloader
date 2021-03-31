@@ -83,6 +83,13 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
         isClosable: true
       })
     } catch (err) {
+      toast({
+        title: 'Download Error',
+        description: video.title,
+        status: 'error',
+        duration: 4000,
+        isClosable: true
+      })
       console.error(err)
     }
   }

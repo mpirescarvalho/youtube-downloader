@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ytdl, { videoFormat } from 'ytdl-core'
 import { Video } from 'youtube-sr'
 import path from 'path'

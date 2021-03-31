@@ -57,19 +57,25 @@ export const DownloaderProvider: React.FC = ({ children }) => {
       }
     }
 
-    if (format.hasVideo) {
-      await downloadVideo(video, format, onProgress)
-    } else {
-      await downloadAudio(video, format, onProgress)
+    try {
+      if (format.hasVideo) {
+        await downloadVideo(video, format, onProgress)
+      } else {
+        await downloadAudio(video, format, onProgress)
+      }
+    } finally {
+      clearDownload(video.id!, 4000)
     }
+  }, [setDownloads])
 
+  function clearDownload(videoId: string, timeout: number) {
     setTimeout(() => {
       updateDownloads(draft => {
-        delete draft[video.id!]
+        delete draft[videoId]
       })
       updateDownloads.flush()
-    }, 4000)
-  }, [setDownloads])
+    }, timeout)
+  }
 
   return (
     <DownloaderContext.Provider value={{ download, downloads }}>
