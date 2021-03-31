@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -38,27 +38,27 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     loading: false
   })
 
+  const loadingVideo = useRef<string | null>(null)
+
   const download = useDownload()
   const isDownloading = useIsDownloading(video.id!)
   const toast = useToast()
 
   useEffect(() => {
-    if (isOpen && !formats.loading && formats.data.length === 0) {
+    if (isOpen) {
+      setSelected(0)
       loadFormats()
     }
-  }, [isOpen, formats])
-
-  useEffect(() => {
-    setSelected(0)
-  }, [video])
+  }, [isOpen])
 
   async function loadFormats() {
     setFormats({ data: [], loading: true })
     try {
+      loadingVideo.current = video.id
       const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
       const info = await ytdl.getInfo(videoUrl)
-      if (isOpen) {
-        const data = filterBetterFormats(info.formats)
+      const data = filterBetterFormats(info.formats)
+      if (loadingVideo.current === video.id) {
         setFormats({ data, loading: false })
       }
     } catch (err) {
@@ -67,6 +67,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
   }
 
   function handleClose() {
+    loadingVideo.current = null
     setFormats({ data: [], loading: false })
     onClose()
   }
