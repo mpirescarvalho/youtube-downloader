@@ -3,10 +3,22 @@ import { Video } from 'youtube-sr'
 import path from 'path'
 import os from 'os'
 import cp from 'child_process'
-import pathToFfmpeg from 'ffmpeg-static'
+import ffmpegStatic from 'ffmpeg-static'
 import fs from 'fs'
 
 import { DownloadProgress } from '../contexts/download'
+
+let FFMPEG_PATH: string
+
+if (process.env.NODE_ENV === 'production') {
+  FFMPEG_PATH = path.resolve(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    ffmpegStatic
+  )
+} else {
+  FFMPEG_PATH = ffmpegStatic
+}
 
 function resolveOutputPath(filename: string, ext: string): string {
   let count = 0
@@ -92,7 +104,7 @@ export async function downloadVideo(
 
     // Start the ffmpeg child process
     const ffmpegProcess = cp.spawn(
-      pathToFfmpeg,
+      FFMPEG_PATH,
       [
         // Remove ffmpeg's console spamming
         '-loglevel',
@@ -132,7 +144,7 @@ export async function downloadVideo(
       }
     )
 
-    ffmpegProcess.stdio[3]?.on('data', () => {
+    ffmpegProcess.stdio[3]!.on('data', () => {
       triggerProgress()
     })
 
@@ -147,7 +159,7 @@ export async function downloadVideo(
     })
 
     const triggerError = (err: Error) => {
-      ffmpegProcess?.kill('SIGINT')
+      ffmpegProcess!.kill('SIGINT')
       Object.assign(currentProgress, { error: err.toString() })
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
@@ -211,7 +223,7 @@ export async function downloadAudio(
 
     // Start the ffmpeg child process
     const ffmpegProcess = cp.spawn(
-      pathToFfmpeg,
+      FFMPEG_PATH,
       [
         // Remove ffmpeg's console spamming
         '-loglevel',
@@ -246,7 +258,7 @@ export async function downloadAudio(
       }
     )
 
-    ffmpegProcess.stdio[3]?.on('data', () => {
+    ffmpegProcess.stdio[3]!.on('data', () => {
       triggerProgress()
     })
 
@@ -261,7 +273,7 @@ export async function downloadAudio(
     })
 
     const triggerError = (err: Error) => {
-      ffmpegProcess?.kill('SIGINT')
+      ffmpegProcess!.kill('SIGINT')
       Object.assign(currentProgress, { error: err.toString() })
       progressCallback(Object.assign({}, currentProgress))
       reject(err)

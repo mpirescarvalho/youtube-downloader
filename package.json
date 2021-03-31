@@ -1,5 +1,6 @@
 {
   "name": "youtube-downloader",
+  "productName": "Youtube Downloader",
   "version": "1.0.0",
   "main": "./dist/main.js",
   "scripts": {
@@ -12,8 +13,10 @@
     "build:run": "npm-run-all build start:electron",
     "build:electron": "webpack --config webpack/electron.webpack.js",
     "build:react": "webpack --config webpack/react.webpack.js",
+    "dist": "npm-run-all build package:setup",
     "package": "npm-run-all build package:dist",
-    "package:dist": "electron-builder --dir"
+    "package:dist": "electron-builder --dir",
+    "package:setup": "electron-builder"
   },
   "keywords": [],
   "author": "Marcelo Carvalho <mpirescarvalho17@gmail.com>",
