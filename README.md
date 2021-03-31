@@ -3,8 +3,10 @@
 <p align="start">
 	  <img alt="GitHub language count" src="https://img.shields.io/github/languages/count/mpirescarvalho/youtube-downloader?style=flat">
 	  <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/mpirescarvalho/youtube-downloader">
-	  <img alt="GitHub stars" src="https://img.shields.io/github/stars/mpirescarvalho/youtube-downloader?style=social">
+    <img alt="Release" src="https://img.shields.io/github/release/mpirescarvalho/youtube-downloader.svg">
+    <img alt="Downloads" src="https://img.shields.io/github/downloads/mpirescarvalho/youtube-downloader/total.svg">
 	  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/mpirescarvalho/youtube-downloader">
+	  <img alt="GitHub stars" src="https://img.shields.io/github/stars/mpirescarvalho/youtube-downloader?style=social">
 </p>
 
 Youtube Downloader is an electron based application that let's you easily browse and download youtube videos in any format of your choice. Search by keyword if you're trying to find a video or by URL if already know the specific video you're looking for. Download only the audio if desired.
