@@ -10,7 +10,6 @@ import {
   Button,
   Image,
   Text,
-  useToast,
   Box,
   Icon,
   Flex
@@ -42,7 +41,6 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   const download = useDownload()
   const downloadStatus = useDownloadStatus(video.id!)
-  const toast = useToast()
 
   useEffect(() => {
     if (isOpen) {
@@ -75,21 +73,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
   async function handleDownload() {
     try {
       await download(video, formats.data[selected])
-      toast({
-        title: 'Download finished',
-        description: video.title,
-        status: 'success',
-        duration: 4000,
-        isClosable: true
-      })
     } catch (err) {
-      toast({
-        title: 'Download Error',
-        description: video.title,
-        status: 'error',
-        duration: 4000,
-        isClosable: true
-      })
       console.error(err)
     }
   }

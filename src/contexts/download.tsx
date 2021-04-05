@@ -87,6 +87,11 @@ export const DownloaderProvider: React.FC = ({ children }) => {
   )
 }
 
+export function useDownloader(): DownloaderData {
+  const context = useContext(DownloaderContext)
+  return context
+}
+
 export function useDownload(): DownloadFunction {
   const context = useContext(DownloaderContext)
   const download = useMemo(() => context.download, [context.download])

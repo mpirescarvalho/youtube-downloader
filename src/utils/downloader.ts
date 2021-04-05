@@ -47,14 +47,6 @@ export async function downloadVideo(
   progressCallback: (progress: DownloadProgress) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const outputPath = resolveOutputPath(video.title || 'video', 'mp4')
-    const startTime = Date.now()
-
-    const streamsTracker = {
-      audio: { downloaded: 0, total: Infinity },
-      video: { downloaded: 0, total: Infinity }
-    }
-
     const currentProgress: DownloadProgress = {
       status: 'starting',
       percent: 0,
@@ -67,102 +59,125 @@ export async function downloadVideo(
     // Tell listeners that download has started
     progressCallback(Object.assign({}, currentProgress))
 
-    const triggerProgress = () => {
-      const total = streamsTracker.audio.total + streamsTracker.video.total
-      const downloaded =
-        streamsTracker.audio.downloaded + streamsTracker.video.downloaded
+    try {
+      const outputPath = resolveOutputPath(video.title || 'video', 'mp4')
+      const startTime = Date.now()
 
-      const percent = downloaded / total
-      const downloadedSeconds = (Date.now() - startTime) / 1000
-      const estimatedDownloadTime =
-        downloadedSeconds / percent - downloadedSeconds
+      const streamsTracker = {
+        audio: { downloaded: 0, total: Infinity },
+        video: { downloaded: 0, total: Infinity }
+      }
 
-      const status = percent === 1 ? 'finished' : 'downloading'
+      const triggerProgress = () => {
+        const total = streamsTracker.audio.total + streamsTracker.video.total
+        const downloaded =
+          streamsTracker.audio.downloaded + streamsTracker.video.downloaded
 
-      Object.assign(currentProgress, {
-        status,
-        percent,
-        downloaded,
-        total,
-        time: downloadedSeconds,
-        timeLeft: estimatedDownloadTime
+        const percent = downloaded / total
+        const downloadedSeconds = (Date.now() - startTime) / 1000
+        const estimatedDownloadTime =
+          downloadedSeconds / percent - downloadedSeconds
+
+        const status = percent === 1 ? 'finished' : 'downloading'
+
+        Object.assign(currentProgress, {
+          status,
+          percent,
+          downloaded,
+          total,
+          time: downloadedSeconds,
+          timeLeft: estimatedDownloadTime
+        })
+
+        progressCallback(Object.assign({}, currentProgress))
+      }
+
+      const videoStream = ytdl(video.url!, { format }).on(
+        'progress',
+        (_, downloaded, total) => {
+          streamsTracker.video = { downloaded, total }
+        }
+      )
+
+      const audioStream = ytdl(video.url!, { quality: 'highestaudio' }).on(
+        'progress',
+        (_, downloaded, total) => {
+          streamsTracker.audio = { downloaded, total }
+        }
+      )
+
+      // Start the ffmpeg child process
+      const ffmpegProcess = cp.spawn(
+        FFMPEG_PATH,
+        [
+          // Remove ffmpeg's console spamming
+          '-loglevel',
+          '8',
+          '-hide_banner',
+          // Redirect/Enable progress messages
+          '-progress',
+          'pipe:3',
+          // Set inputs
+          '-i',
+          'pipe:4',
+          '-i',
+          'pipe:5',
+          // Map audio & video from streams
+          '-map',
+          '0:a',
+          '-map',
+          '1:v',
+          // Keep encoding
+          '-c:v',
+          'copy',
+          // Define output file
+          outputPath
+        ],
+        {
+          windowsHide: true,
+          stdio: [
+            /* Standard: stdin, stdout, stderr */
+            'inherit',
+            'inherit',
+            'inherit',
+            /* Custom: pipe:3, pipe:4, pipe:5 */
+            'pipe',
+            'pipe',
+            'pipe'
+          ]
+        }
+      )
+
+      ffmpegProcess.stdio[3]!.on('data', () => {
+        triggerProgress()
       })
 
-      progressCallback(Object.assign({}, currentProgress))
-    }
-
-    const videoStream = ytdl(video.url!, { format }).on(
-      'progress',
-      (_, downloaded, total) => {
-        streamsTracker.video = { downloaded, total }
-      }
-    )
-
-    const audioStream = ytdl(video.url!, { quality: 'highestaudio' }).on(
-      'progress',
-      (_, downloaded, total) => {
-        streamsTracker.audio = { downloaded, total }
-      }
-    )
-
-    // Start the ffmpeg child process
-    const ffmpegProcess = cp.spawn(
-      FFMPEG_PATH,
-      [
-        // Remove ffmpeg's console spamming
-        '-loglevel',
-        '8',
-        '-hide_banner',
-        // Redirect/Enable progress messages
-        '-progress',
-        'pipe:3',
-        // Set inputs
-        '-i',
-        'pipe:4',
-        '-i',
-        'pipe:5',
-        // Map audio & video from streams
-        '-map',
-        '0:a',
-        '-map',
-        '1:v',
-        // Keep encoding
-        '-c:v',
-        'copy',
-        // Define output file
-        outputPath
-      ],
-      {
-        windowsHide: true,
-        stdio: [
-          /* Standard: stdin, stdout, stderr */
-          'inherit',
-          'inherit',
-          'inherit',
-          /* Custom: pipe:3, pipe:4, pipe:5 */
-          'pipe',
-          'pipe',
-          'pipe'
-        ]
-      }
-    )
-
-    ffmpegProcess.stdio[3]!.on('data', () => {
-      triggerProgress()
-    })
-
-    ffmpegProcess.on('close', () => {
-      Object.assign(currentProgress, {
-        status: 'finished',
-        percent: 1,
-        downloaded: currentProgress.total
+      ffmpegProcess.on('close', () => {
+        Object.assign(currentProgress, {
+          status: 'finished',
+          percent: 1,
+          downloaded: currentProgress.total
+        })
+        progressCallback(Object.assign({}, currentProgress))
+        resolve()
       })
-      progressCallback(Object.assign({}, currentProgress))
-      resolve()
-    })
 
-    const triggerError = (err: Error) => {
-      ffmpegProcess!.kill('SIGINT')
+      const triggerError = (err: Error) => {
+        ffmpegProcess!.kill('SIGINT')
+        Object.assign(currentProgress, {
+          status: 'failed',
+          error: err.toString()
+        })
+        progressCallback(Object.assign({}, currentProgress))
+        reject(err)
+      }
+
+      audioStream.on('error', triggerError)
+      videoStream.on('error', triggerError)
+
+      audioStream.pipe(ffmpegProcess.stdio[4] as any)
+      videoStream.pipe(ffmpegProcess.stdio[5 as any] as any)
+    } catch (err) {
       Object.assign(currentProgress, {
         status: 'failed',
         error: err.toString()
@@ -170,12 +185,6 @@ export async function downloadVideo(
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
     }
-
-    audioStream.on('error', triggerError)
-    videoStream.on('error', triggerError)
-
-    audioStream.pipe(ffmpegProcess.stdio[4] as any)
-    videoStream.pipe(ffmpegProcess.stdio[5 as any] as any)
   })
 }
 
@@ -185,9 +194,6 @@ export async function downloadAudio(
   progressCallback: (progress: DownloadProgress) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
-    const startTime = Date.now()
-
     const currentProgress: DownloadProgress = {
       status: 'starting',
       percent: 0,
@@ -200,88 +206,103 @@ export async function downloadAudio(
     // Tell listeners that download has started
     progressCallback(Object.assign({}, currentProgress))
 
-    const triggerProgress = () => {
-      const { downloaded, total } = currentProgress
-      const percent = downloaded / total
-      const downloadedSeconds = (Date.now() - startTime) / 1000
-      const estimatedDownloadTime =
-        downloadedSeconds / percent - downloadedSeconds
+    try {
+      const outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
+      const startTime = Date.now()
 
-      const status = percent === 1 ? 'finished' : 'downloading'
+      const triggerProgress = () => {
+        const { downloaded, total } = currentProgress
+        const percent = downloaded / total
+        const downloadedSeconds = (Date.now() - startTime) / 1000
+        const estimatedDownloadTime =
+          downloadedSeconds / percent - downloadedSeconds
 
-      Object.assign(currentProgress, {
-        status,
-        percent,
-        downloaded,
-        total,
-        time: downloadedSeconds,
-        timeLeft: estimatedDownloadTime
+        const status = percent === 1 ? 'finished' : 'downloading'
+
+        Object.assign(currentProgress, {
+          status,
+          percent,
+          downloaded,
+          total,
+          time: downloadedSeconds,
+          timeLeft: estimatedDownloadTime
+        })
+
+        progressCallback(Object.assign({}, currentProgress))
+      }
+
+      const audioStream = ytdl(video.url!, { format }).on(
+        'progress',
+        (_, downloaded, total) => {
+          currentProgress.downloaded = downloaded
+          currentProgress.total = total
+        }
+      )
+
+      // Start the ffmpeg child process
+      const ffmpegProcess = cp.spawn(
+        FFMPEG_PATH,
+        [
+          // Remove ffmpeg's console spamming
+          '-loglevel',
+          '8',
+          '-hide_banner',
+          // Redirect/Enable progress messages
+          '-progress',
+          'pipe:3',
+          // Set inputs
+          '-i',
+          'pipe:4',
+          // grap audio only
+          '-q:a',
+          '0',
+          '-map',
+          'a',
+          // Define output file
+          outputPath
+        ],
+        {
+          windowsHide: true,
+          stdio: [
+            /* Standard: stdin, stdout */
+            'inherit',
+            'inherit',
+            'inherit',
+            /* Custom: pipe:3, pipe:4 */
+            'pipe',
+            'pipe',
+            'pipe'
+          ]
+        }
+      )
+
+      ffmpegProcess.stdio[3]!.on('data', () => {
+        triggerProgress()
       })
 
-      progressCallback(Object.assign({}, currentProgress))
-    }
-
-    const audioStream = ytdl(video.url!, { format }).on(
-      'progress',
-      (_, downloaded, total) => {
-        currentProgress.downloaded = downloaded
-        currentProgress.total = total
-      }
-    )
-
-    // Start the ffmpeg child process
-    const ffmpegProcess = cp.spawn(
-      FFMPEG_PATH,
-      [
-        // Remove ffmpeg's console spamming
-        '-loglevel',
-        '8',
-        '-hide_banner',
-        // Redirect/Enable progress messages
-        '-progress',
-        'pipe:3',
-        // Set inputs
-        '-i',
-        'pipe:4',
-        // grap audio only
-        '-q:a',
-        '0',
-        '-map',
-        'a',
-        // Define output file
-        outputPath
-      ],
-      {
-        windowsHide: true,
-        stdio: [
-          /* Standard: stdin, stdout */
-          'inherit',
-          'inherit',
-          'inherit',
-          /* Custom: pipe:3, pipe:4 */
-          'pipe',
-          'pipe',
-          'pipe'
-        ]
-      }
-    )
-
-    ffmpegProcess.stdio[3]!.on('data', () => {
-      triggerProgress()
-    })
-
-    ffmpegProcess.on('close', () => {
-      Object.assign(currentProgress, {
-        status: 'finished',
-        percent: 1,
-        downloaded: currentProgress.total
+      ffmpegProcess.on('close', () => {
+        Object.assign(currentProgress, {
+          status: 'finished',
+          percent: 1,
+          downloaded: currentProgress.total
+        })
+        progressCallback(Object.assign({}, currentProgress))
+        resolve()
       })
-      progressCallback(Object.assign({}, currentProgress))
-      resolve()
-    })
 
-    const triggerError = (err: Error) => {
-      ffmpegProcess!.kill('SIGINT')
+      const triggerError = (err: Error) => {
+        ffmpegProcess!.kill('SIGINT')
+        Object.assign(currentProgress, {
+          status: 'failed',
+          error: err.toString()
+        })
+        progressCallback(Object.assign({}, currentProgress))
+        reject(err)
+      }
+
+      audioStream.on('error', triggerError)
+      audioStream.pipe(ffmpegProcess.stdio[4] as any)
+    } catch (err) {
       Object.assign(currentProgress, {
         status: 'failed',
         error: err.toString()
@@ -289,8 +310,5 @@ export async function downloadAudio(
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
     }
-
-    audioStream.on('error', triggerError)
-    audioStream.pipe(ffmpegProcess.stdio[4] as any)
   })
 }

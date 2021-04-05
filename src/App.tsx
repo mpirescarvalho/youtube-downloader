@@ -9,6 +9,7 @@ import icon from './assets/icon.svg'
 
 import VideoList from './components/VideoList'
 import SearchBar from './components/SearchBar'
+import DownloadWatcher from './components/DownloadWatcher'
 
 import { DownloaderProvider } from './contexts/download'
 import { VideosProvider } from './contexts/videos'
@@ -60,6 +61,8 @@ const App = () => {
               />
 
               <VideoList width="90%" maxW="1000px" />
+
+              <DownloadWatcher />
             </Scrollbars>
           </DownloadModalProvider>
         </VideosProvider>
