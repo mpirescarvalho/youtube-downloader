@@ -55,8 +55,8 @@ export async function downloadVideo(
       video: { downloaded: 0, total: Infinity }
     }
 
-    const currentProgress = {
-      complete: false,
+    const currentProgress: DownloadProgress = {
+      status: 'starting',
       percent: 0,
       downloaded: 0,
       total: 0,
@@ -77,8 +77,10 @@ export async function downloadVideo(
       const estimatedDownloadTime =
         downloadedSeconds / percent - downloadedSeconds
 
+      const status = percent === 1 ? 'finished' : 'downloading'
+
       Object.assign(currentProgress, {
-        complete: percent === 1,
+        status,
         percent,
         downloaded,
         total,
@@ -151,7 +153,7 @@ export async function downloadVideo(
 
     ffmpegProcess.on('close', () => {
       Object.assign(currentProgress, {
-        complete: true,
+        status: 'finished',
         percent: 1,
         downloaded: currentProgress.total
       })
@@ -161,7 +163,10 @@ export async function downloadVideo(
 
     const triggerError = (err: Error) => {
       ffmpegProcess!.kill('SIGINT')
-      Object.assign(currentProgress, { error: err.toString() })
+      Object.assign(currentProgress, {
+        status: 'failed',
+        error: err.toString()
+      })
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
     }
@@ -183,8 +188,8 @@ export async function downloadAudio(
     const outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
     const startTime = Date.now()
 
-    const currentProgress = {
-      complete: false,
+    const currentProgress: DownloadProgress = {
+      status: 'starting',
       percent: 0,
       downloaded: 0,
       total: 0,
@@ -202,8 +207,10 @@ export async function downloadAudio(
       const estimatedDownloadTime =
         downloadedSeconds / percent - downloadedSeconds
 
+      const status = percent === 1 ? 'finished' : 'downloading'
+
       Object.assign(currentProgress, {
-        complete: percent === 1,
+        status,
         percent,
         downloaded,
         total,
@@ -265,7 +272,7 @@ export async function downloadAudio(
 
     ffmpegProcess.on('close', () => {
       Object.assign(currentProgress, {
-        complete: true,
+        status: 'finished',
         percent: 1,
         downloaded: currentProgress.total
       })
@@ -275,7 +282,10 @@ export async function downloadAudio(
 
     const triggerError = (err: Error) => {
       ffmpegProcess!.kill('SIGINT')
-      Object.assign(currentProgress, { error: err.toString() })
+      Object.assign(currentProgress, {
+        status: 'failed',
+        error: err.toString()
+      })
       progressCallback(Object.assign({}, currentProgress))
       reject(err)
     }

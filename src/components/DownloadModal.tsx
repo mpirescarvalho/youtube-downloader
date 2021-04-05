@@ -22,7 +22,7 @@ import ytdl, { videoFormat } from 'ytdl-core'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { filterBetterFormats } from '../utils'
-import { useDownload, useIsDownloading } from '../contexts/download'
+import { useDownload, useDownloadStatus } from '../contexts/download'
 import Progress from './Progress'
 
 interface DownloadModalProps {
@@ -41,7 +41,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
   const loadingVideo = useRef<string | null>(null)
 
   const download = useDownload()
-  const isDownloading = useIsDownloading(video.id!)
+  const downloadStatus = useDownloadStatus(video.id!)
   const toast = useToast()
 
   useEffect(() => {
@@ -151,7 +151,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             selected={selected}
             setSelected={setSelected}
             isLoading={formats.loading}
-            disabled={formats.loading || isDownloading}
+            disabled={formats.loading || (downloadStatus !== null)}
           />
 
           <div>
@@ -159,7 +159,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
               onClick={handleDownload}
               colorScheme="red"
               mr={3}
-              disabled={formats.loading || isDownloading}
+              disabled={formats.loading || (downloadStatus !== null)}
             >
               Download
             </Button>

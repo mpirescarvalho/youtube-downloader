@@ -6,8 +6,10 @@ import produce from 'immer'
 
 import { downloadVideo, downloadAudio } from '../utils/downloader'
 
+export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed'
+
 export type DownloadProgress = {
-  complete: boolean
+  status: DownloadStatus
   error?: string
   percent: number
   downloaded: number
@@ -52,7 +54,8 @@ export const DownloaderProvider: React.FC = ({ children }) => {
           progress
         }
       })
-      if (progress.complete) {
+
+      if (['starting', 'paused', 'stopped', 'finished', 'failed'].includes(progress.status)) {
         updateDownloads.flush()
       }
     }
@@ -104,16 +107,20 @@ export function useDownloadInfo(videoId: string): DownloadInfo {
   return downloadInfo
 }
 
-export function useIsDownloading(videoId: string): boolean {
-  const context = useContext(DownloaderContext)
-  const [isDownloading, setIsDownloading] = useState(false)
+export function useDownloadStatus(videoId: string): DownloadStatus | null {
+  const { downloads } = useContext(DownloaderContext)
+  const [status, setStatus] = useState<DownloadStatus | null>(null)
   useEffect(() => {
-    const exists = context.downloads[videoId]
-    if (!!exists !== isDownloading) {
-      setIsDownloading(!!exists)
+    let newStatus: DownloadStatus | null = null
+    const download = downloads[videoId]
+    if (download) {
+      newStatus = download.progress.status
     }
-  }, [isDownloading, context.downloads])
-  return isDownloading
+    if (newStatus !== status) {
+      setStatus(newStatus)
+    }
+  }, [status, downloads])
+  return status
 }
 
 export function useDownloadingVideos(): Video[] {
