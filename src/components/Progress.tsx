@@ -25,8 +25,9 @@ const Progress: React.FC<ProgressProps> = ({ videoId, ...props }) => {
     percent,
     downloaded,
     total,
-    timeLeft
-  } = downloadInfo.progress
+    timeLeft,
+    status
+  } = downloadInfo?.progress
 
   const percentage = Math.trunc(percent * 100)
 
@@ -38,6 +39,7 @@ const Progress: React.FC<ProgressProps> = ({ videoId, ...props }) => {
           width="100%"
           colorScheme="green"
           borderRadius="2"
+          isIndeterminate={status === 'starting'}
         />
 
         <Flex
@@ -48,7 +50,7 @@ const Progress: React.FC<ProgressProps> = ({ videoId, ...props }) => {
           color="white"
           marginTop="2"
         >
-          <Text>Fazendo download</Text>
+          <Text>Downloading</Text>
           <Text>{percentage}%</Text>
         </Flex>
 
