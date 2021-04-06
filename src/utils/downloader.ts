@@ -43,6 +43,12 @@ if (process.env.NODE_ENV === 'production') {
   FFMPEG_PATH = ffmpegStatic
 }
 
+async function clearFile(filename: string) {
+  if (fs.existsSync(filename)) {
+    fs.unlinkSync(filename)
+  }
+}
+
 function resolveOutputPath(filename: string, ext: string): string {
   let count = 0
   const getSuffix = () => {
@@ -82,8 +88,10 @@ function downloadVideo({
     // Tell listeners that download has started
     progressCallback?.(Object.assign({}, currentProgress))
 
+    let outputPath = ''
+
     try {
-      const outputPath = resolveOutputPath(video.title || 'video', 'mp4')
+      outputPath = resolveOutputPath(video.title || 'video', 'mp4')
       const startTime = Date.now()
 
       const streamsTracker = {
@@ -199,6 +207,7 @@ function downloadVideo({
           error: err.toString()
         })
         progressCallback?.(Object.assign({}, currentProgress))
+        clearFile(outputPath)
         reject(err)
       }
 
@@ -229,6 +238,7 @@ function downloadVideo({
           videoStream.destroy()
           currentProgress.status = 'stopped'
           progressCallback?.(Object.assign({}, currentProgress))
+          clearFile(outputPath)
           reject(new DownloadAbortError())
         }
       }
@@ -238,6 +248,7 @@ function downloadVideo({
         error: err.toString()
       })
       progressCallback?.(Object.assign({}, currentProgress))
+      clearFile(outputPath)
       reject(err)
     }
   })
@@ -262,8 +273,10 @@ async function downloadAudio({
     // Tell listeners that download has started
     progressCallback?.(Object.assign({}, currentProgress))
 
+    let outputPath = ''
+
     try {
-      const outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
+      outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
       const startTime = Date.now()
 
       const triggerProgress = () => {
@@ -360,6 +373,7 @@ async function downloadAudio({
           error: err.toString()
         })
         progressCallback?.(Object.assign({}, currentProgress))
+        clearFile(outputPath)
         reject(err)
       }
 
@@ -384,6 +398,7 @@ async function downloadAudio({
           audioStream.destroy()
           currentProgress.status = 'stopped'
           progressCallback?.(Object.assign({}, currentProgress))
+          clearFile(outputPath)
           reject(new Error('canceled by user'))
         }
       }
@@ -393,6 +408,7 @@ async function downloadAudio({
         error: err.toString()
       })
       progressCallback?.(Object.assign({}, currentProgress))
+      clearFile(outputPath)
       reject(err)
     }
   })
