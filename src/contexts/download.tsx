@@ -150,18 +150,38 @@ export function useDownloadInfo(videoId: string): DownloadInfo {
 
 export function useDownloadStatus(videoId: string): DownloadStatus | null {
   const { downloads } = useContext(DownloaderContext)
-  const [status, setStatus] = useState<DownloadStatus | null>(null)
-  useEffect(() => {
-    let newStatus: DownloadStatus | null = null
-    const download = downloads[videoId]
-    if (download) {
-      newStatus = download.progress.status
-    }
-    if (newStatus !== status) {
-      setStatus(newStatus)
-    }
-  }, [videoId, status, downloads])
-  return status
+  const status = useRef<DownloadStatus | null>(null)
+
+  let newStatus: DownloadStatus | null = null
+  const download = downloads[videoId]
+
+  if (download) {
+    newStatus = download.progress.status
+  }
+
+  if (newStatus !== status.current) {
+    status.current = newStatus
+  }
+
+  return status.current
+}
+
+export function useDownloadFormat(videoId: string): videoFormat | null {
+  const { downloads } = useContext(DownloaderContext)
+  const format = useRef<videoFormat | null>(null)
+
+  let newFormat: videoFormat | null = null
+  const download = downloads[videoId]
+
+  if (download) {
+    newFormat = download.format
+  }
+
+  if (newFormat !== format.current) {
+    format.current = newFormat
+  }
+
+  return format.current
 }
 
 export function useDownloadingVideos(): Video[] {
