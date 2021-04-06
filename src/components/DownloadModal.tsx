@@ -16,11 +16,11 @@ import {
 } from '@chakra-ui/react'
 import { Video } from 'youtube-sr'
 import { FaDownload } from 'react-icons/fa'
-import ytdl, { videoFormat } from 'ytdl-core'
+import { videoFormat } from 'ytdl-core'
 
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
-import { filterBetterFormats } from '../utils'
+import { fetchVideoFormats } from '../utils/formats'
 import { useDownloader, useDownloadStatus } from '../contexts/download'
 import Progress from './Progress'
 
@@ -53,9 +53,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     setFormats({ data: [], loading: true })
     try {
       loadingVideo.current = video.id
-      const videoUrl = `https://www.youtube.com/watch?v=${video.id}`
-      const info = await ytdl.getInfo(videoUrl)
-      const data = filterBetterFormats(info.formats)
+      const data = await fetchVideoFormats(video.id!)
       if (loadingVideo.current === video.id) {
         setFormats({ data, loading: false })
       }

@@ -1,5 +1,3 @@
-import { chooseFormat, filterFormats, videoFormat } from 'ytdl-core'
-
 export function formatNumberFloat(num: number, digits: number): string {
   const si = [
     { value: 1, symbol: '' },
@@ -23,32 +21,4 @@ export function formatNumberFloat(num: number, digits: number): string {
 export function formatNumber(num: number): string {
   const digits = num > 999999 ? 1 : 0
   return formatNumberFloat(num, digits)
-}
-
-export function findBestAudioTrack(formats: videoFormat[]): videoFormat | null {
-  return chooseFormat(
-    filterFormats(formats, (format) => !format.hasVideo && format.hasAudio),
-    { quality: 'highestaudio' }
-  )
-}
-
-export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
-  const audioTrack = findBestAudioTrack(formats)
-  const formatsPushed: string[] = []
-  const result = filterFormats(
-    formats,
-    (format) =>
-      format.hasVideo && !format.hasAudio && format.container === 'mp4'
-  ).filter((format) => {
-    if (!formatsPushed.includes(format.qualityLabel)) {
-      formatsPushed.push(format.qualityLabel)
-      return true
-    }
-    return false
-  })
-  if (audioTrack) {
-    audioTrack.container = 'mp3' as any
-    result.push(audioTrack)
-  }
-  return result
 }
