@@ -144,7 +144,7 @@ export function useDownloadInfo(videoId: string): DownloadInfo {
     if (JSON.stringify(downloadInfo) !== JSON.stringify(downloadInfoById)) {
       setDownloadInfo(downloadInfoById)
     }
-  }, [downloadInfo, context.downloads])
+  }, [videoId, downloadInfo, context.downloads])
   return downloadInfo
 }
 
@@ -160,7 +160,7 @@ export function useDownloadStatus(videoId: string): DownloadStatus | null {
     if (newStatus !== status) {
       setStatus(newStatus)
     }
-  }, [status, downloads])
+  }, [videoId, status, downloads])
   return status
 }
 
