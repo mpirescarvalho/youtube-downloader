@@ -21,8 +21,9 @@ import { videoFormat } from 'ytdl-core'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { fetchVideoFormats } from '../utils/formats'
-import { useDownloader, useDownloadStatus } from '../contexts/download'
+import { useDownloader, useDownloadFormat, useDownloadStatus } from '../contexts/download'
 import Progress from './Progress'
+import usePrevious from '../hooks/usePrevious'
 
 interface DownloadModalProps {
   video: Video
@@ -37,17 +38,27 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
     loading: false
   })
 
+  const wasOpened = usePrevious(isOpen)
   const loadingVideo = useRef<string | null>(null)
 
   const { download, stop } = useDownloader()
   const downloadStatus = useDownloadStatus(video.id!)
+  const downloadFormat = useDownloadFormat(video.id!)
 
   useEffect(() => {
-    if (isOpen) {
-      setSelected(0)
+    const hasOpened = isOpen && !wasOpened
+    if (hasOpened) {
       loadFormats()
+      if (!downloadFormat) {
+        setSelected(0)
+      } else {
+        fetchVideoFormats(video.id!).then((formats) => {
+          const index = formats.indexOf(downloadFormat)
+          setSelected(index)
+        })
+      }
     }
-  }, [isOpen])
+  })
 
   async function loadFormats() {
     setFormats({ data: [], loading: true })
