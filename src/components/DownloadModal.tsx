@@ -39,7 +39,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   const loadingVideo = useRef<string | null>(null)
 
-  const { download } = useDownloader()
+  const { download, stop } = useDownloader()
   const downloadStatus = useDownloadStatus(video.id!)
 
   useEffect(() => {
@@ -139,14 +139,26 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
           />
 
           <div>
-            <Button
-              onClick={handleDownload}
-              colorScheme="red"
-              mr={3}
-              disabled={formats.loading || (downloadStatus !== null)}
-            >
-              Download
-            </Button>
+            {!downloadStatus || (downloadStatus === 'starting') ? (
+              <Button
+                onClick={handleDownload}
+                colorScheme="red"
+                mr={3}
+                isLoading={downloadStatus === 'starting'}
+                disabled={formats.loading || !!downloadStatus}
+              >
+                Download
+              </Button>
+            ) : (
+              <Button
+                onClick={() => stop(video)}
+                colorScheme="red"
+                mr={3}
+                disabled={downloadStatus !== 'downloading'}
+              >
+                Stop
+              </Button>
+            )}
 
             <Button
               onClick={onClose}
