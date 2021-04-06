@@ -190,18 +190,20 @@ function downloadVideo({
         triggerProgress()
       })
 
-      ffmpegProcess.on('close', () => {
-        Object.assign(currentProgress, {
-          status: 'finished',
-          percent: 1,
-          downloaded: currentProgress.total
-        })
-        progressCallback?.(Object.assign({}, currentProgress))
-        resolve()
+      ffmpegProcess.on('close', (statusCode) => {
+        if (statusCode === 0) {
+          Object.assign(currentProgress, {
+            status: 'finished',
+            percent: 1,
+            downloaded: currentProgress.total
+          })
+          progressCallback?.(Object.assign({}, currentProgress))
+          resolve()
+        }
       })
 
       const triggerError = (err: Error) => {
-        ffmpegProcess!.kill('SIGINT')
+        ffmpegProcess.kill('SIGINT')
         Object.assign(currentProgress, {
           status: 'failed',
           error: err.toString()
@@ -233,7 +235,7 @@ function downloadVideo({
         }
 
         controller.stop = () => {
-          ffmpegProcess.kill()
+          ffmpegProcess.kill('SIGINT')
           audioStream.destroy()
           videoStream.destroy()
           currentProgress.status = 'stopped'
@@ -356,18 +358,20 @@ async function downloadAudio({
         triggerProgress()
       })
 
-      ffmpegProcess.on('close', () => {
-        Object.assign(currentProgress, {
-          status: 'finished',
-          percent: 1,
-          downloaded: currentProgress.total
-        })
-        progressCallback?.(Object.assign({}, currentProgress))
-        resolve()
+      ffmpegProcess.on('close', (statusCode) => {
+        if (statusCode === 0) {
+          Object.assign(currentProgress, {
+            status: 'finished',
+            percent: 1,
+            downloaded: currentProgress.total
+          })
+          progressCallback?.(Object.assign({}, currentProgress))
+          resolve()
+        }
       })
 
       const triggerError = (err: Error) => {
-        ffmpegProcess!.kill('SIGINT')
+        ffmpegProcess.kill('SIGINT')
         Object.assign(currentProgress, {
           status: 'failed',
           error: err.toString()
@@ -394,7 +398,7 @@ async function downloadAudio({
         }
 
         controller.stop = () => {
-          ffmpegProcess.kill()
+          ffmpegProcess.kill('SIGINT')
           audioStream.destroy()
           currentProgress.status = 'stopped'
           progressCallback?.(Object.assign({}, currentProgress))
