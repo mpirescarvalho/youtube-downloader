@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useToast } from '@chakra-ui/react'
 
-import { Download, useDownloader } from '../contexts/download'
+import { Download, useDownloaderData } from '../contexts/download'
 
 type WatchedDownloads = Record<string, Download>
 
 const DownloadWatcher: React.FC = () => {
-  const { downloads } = useDownloader()
+  const { downloads } = useDownloaderData()
   const toast = useToast()
 
   const oldWatchedDownloads = useRef<WatchedDownloads>({})

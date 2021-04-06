@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useCallback, useState, useMemo, useEffect } from 'react'
+import React, { createContext, useContext, useCallback, useState, useMemo, useEffect, useRef } from 'react'
 import { useThrottledCallback } from 'use-debounce'
 import { Video } from 'youtube-sr'
 import { videoFormat } from 'ytdl-core'
 import produce from 'immer'
 
-import { downloadVideo, downloadAudio } from '../utils/downloader'
+import { download as executeDownload, DownloadController } from '../utils/downloader'
+import DownloadAbortError from '../errors/DownloadAbortError'
 
 export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed'
 
@@ -26,16 +27,21 @@ export type Download = {
 }
 
 export type Downloads = Record<string, Download>
+export type Controllers = Record<string, DownloadController>
 
 export interface DownloaderData {
   downloads: Downloads
   download: DownloadFunction
+  pause: (video: Video) => void
+  resume: (video: Video) => void
+  stop: (video: Video) => void
 }
 
 const DownloaderContext = createContext<DownloaderData>({} as DownloaderData)
 
 export const DownloaderProvider: React.FC = ({ children }) => {
   const [downloads, setDownloads] = useState<Downloads>({})
+  const controllers = useRef<Controllers>({})
 
   const updateDownloads = useThrottledCallback((updateFunc: (draft: Downloads) => void) => {
     setDownloads(produce(updateFunc))
@@ -46,7 +52,10 @@ export const DownloaderProvider: React.FC = ({ children }) => {
       throw new Error('Invalid video id')
     }
 
-    const onProgress = (progress: DownloadProgress) => {
+    const controller = new DownloadController()
+    controllers.current[video.id!] = controller
+
+    const progressCallback = (progress: DownloadProgress) => {
       updateDownloads(draft => {
         draft[video.id!] = {
           video,
@@ -61,15 +70,35 @@ export const DownloaderProvider: React.FC = ({ children }) => {
     }
 
     try {
-      if (format.hasVideo) {
-        await downloadVideo(video, format, onProgress)
+      await executeDownload({
+        video,
+        format,
+        controller,
+        progressCallback,
+        audioOnly: !format.hasVideo
+      })
+    } catch (err) {
+      if (err instanceof DownloadAbortError) {
+        clearDownload(video.id!, 0)
       } else {
-        await downloadAudio(video, format, onProgress)
+        throw err
       }
     } finally {
       clearDownload(video.id!, 4000)
     }
   }, [setDownloads])
+
+  const pause = useCallback((video: Video) => {
+    controllers.current[video.id!]?.pause()
+  }, [])
+
+  const resume = useCallback((video: Video) => {
+    controllers.current[video.id!]?.resume()
+  }, [])
+
+  const stop = useCallback((video: Video) => {
+    controllers.current[video.id!]?.stop()
+  }, [])
 
   function clearDownload(videoId: string, timeout: number) {
     setTimeout(() => {
@@ -77,25 +106,32 @@ export const DownloaderProvider: React.FC = ({ children }) => {
         delete draft[videoId]
       })
       updateDownloads.flush()
+      delete controllers.current[videoId]
     }, timeout)
   }
 
   return (
-    <DownloaderContext.Provider value={{ download, downloads }}>
+    <DownloaderContext.Provider value={{
+      download,
+      downloads,
+      pause,
+      resume,
+      stop
+    }}>
       {children}
     </DownloaderContext.Provider>
   )
 }
 
-export function useDownloader(): DownloaderData {
+export function useDownloaderData(): DownloaderData {
   const context = useContext(DownloaderContext)
   return context
 }
 
-export function useDownload(): DownloadFunction {
-  const context = useContext(DownloaderContext)
-  const download = useMemo(() => context.download, [context.download])
-  return download
+export function useDownloader(): Omit<DownloaderData, 'downloads'> {
+  const { download, pause, resume, stop } = useContext(DownloaderContext)
+  const downloader = useMemo(() => ({ download, pause, resume, stop }), [download, pause, resume, stop])
+  return downloader
 }
 
 export type DownloadInfo = Download | undefined

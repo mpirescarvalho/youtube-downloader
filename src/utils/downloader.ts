@@ -1,13 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import ytdl, { videoFormat } from 'ytdl-core'
+import ytdl, { downloadOptions, videoFormat } from 'ytdl-core'
 import { Video } from 'youtube-sr'
 import path from 'path'
 import os from 'os'
 import cp from 'child_process'
 import ffmpegStatic from 'ffmpeg-static'
 import fs from 'fs'
-
 import { DownloadProgress } from '../contexts/download'
+import DownloadAbortError from '../errors/DownloadAbortError'
+
+export class DownloadController {
+  pause(): void {
+    /* do nothing */
+  }
+
+  resume(): void {
+    /* do nothing */
+  }
+
+  stop(): void {
+    /* do nothing */
+  }
+}
+
+export type DownloadParams = {
+  video: Video
+  format?: videoFormat
+  audioOnly?: boolean
+  controller?: DownloadController
+  progressCallback?: (progress: DownloadProgress) => void
+}
 
 let FFMPEG_PATH: string
 
@@ -41,11 +63,12 @@ function resolveOutputPath(filename: string, ext: string): string {
   return outputPath
 }
 
-export async function downloadVideo(
-  video: Video,
-  format: videoFormat,
-  progressCallback: (progress: DownloadProgress) => void
-): Promise<void> {
+function downloadVideo({
+  video,
+  format,
+  controller,
+  progressCallback
+}: Omit<DownloadParams, 'audioOnly'>): Promise<void> {
   return new Promise((resolve, reject) => {
     const currentProgress: DownloadProgress = {
       status: 'starting',
@@ -57,7 +80,7 @@ export async function downloadVideo(
     }
 
     // Tell listeners that download has started
-    progressCallback(Object.assign({}, currentProgress))
+    progressCallback?.(Object.assign({}, currentProgress))
 
     try {
       const outputPath = resolveOutputPath(video.title || 'video', 'mp4')
@@ -89,10 +112,17 @@ export async function downloadVideo(
           timeLeft: estimatedDownloadTime
         })
 
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
       }
 
-      const videoStream = ytdl(video.url!, { format }).on(
+      const options: downloadOptions = {}
+      if (format) {
+        options.format = format
+      } else {
+        options.quality = 'highestvideo'
+      }
+
+      const videoStream = ytdl(video.url!, options).on(
         'progress',
         (_, downloaded, total) => {
           streamsTracker.video = { downloaded, total }
@@ -158,7 +188,7 @@ export async function downloadVideo(
           percent: 1,
           downloaded: currentProgress.total
         })
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
         resolve()
       })
 
@@ -168,7 +198,7 @@ export async function downloadVideo(
           status: 'failed',
           error: err.toString()
         })
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
         reject(err)
       }
 
@@ -177,22 +207,48 @@ export async function downloadVideo(
 
       audioStream.pipe(ffmpegProcess.stdio[4] as any)
       videoStream.pipe(ffmpegProcess.stdio[5 as any] as any)
+
+      if (controller) {
+        controller.pause = () => {
+          audioStream.pause()
+          videoStream.pause()
+          currentProgress.status = 'paused'
+          progressCallback?.(Object.assign({}, currentProgress))
+        }
+
+        controller.resume = () => {
+          audioStream.resume()
+          videoStream.resume()
+          currentProgress.status = 'downloading'
+          progressCallback?.(Object.assign({}, currentProgress))
+        }
+
+        controller.stop = () => {
+          ffmpegProcess.kill()
+          audioStream.destroy()
+          videoStream.destroy()
+          currentProgress.status = 'stopped'
+          progressCallback?.(Object.assign({}, currentProgress))
+          reject(new DownloadAbortError())
+        }
+      }
     } catch (err) {
       Object.assign(currentProgress, {
         status: 'failed',
         error: err.toString()
       })
-      progressCallback(Object.assign({}, currentProgress))
+      progressCallback?.(Object.assign({}, currentProgress))
       reject(err)
     }
   })
 }
 
-export async function downloadAudio(
-  video: Video,
-  format: videoFormat,
-  progressCallback: (progress: DownloadProgress) => void
-): Promise<void> {
+async function downloadAudio({
+  video,
+  format,
+  controller,
+  progressCallback
+}: Omit<DownloadParams, 'audioOnly'>): Promise<void> {
   return new Promise((resolve, reject) => {
     const currentProgress: DownloadProgress = {
       status: 'starting',
@@ -204,7 +260,7 @@ export async function downloadAudio(
     }
 
     // Tell listeners that download has started
-    progressCallback(Object.assign({}, currentProgress))
+    progressCallback?.(Object.assign({}, currentProgress))
 
     try {
       const outputPath = resolveOutputPath(video.title || 'audio', 'mp3')
@@ -228,10 +284,17 @@ export async function downloadAudio(
           timeLeft: estimatedDownloadTime
         })
 
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
       }
 
-      const audioStream = ytdl(video.url!, { format }).on(
+      const options: downloadOptions = {}
+      if (format) {
+        options.format = format
+      } else {
+        options.quality = 'highestaudio'
+      }
+
+      const audioStream = ytdl(video.url!, options).on(
         'progress',
         (_, downloaded, total) => {
           currentProgress.downloaded = downloaded
@@ -286,7 +349,7 @@ export async function downloadAudio(
           percent: 1,
           downloaded: currentProgress.total
         })
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
         resolve()
       })
 
@@ -296,19 +359,49 @@ export async function downloadAudio(
           status: 'failed',
           error: err.toString()
         })
-        progressCallback(Object.assign({}, currentProgress))
+        progressCallback?.(Object.assign({}, currentProgress))
         reject(err)
       }
 
       audioStream.on('error', triggerError)
       audioStream.pipe(ffmpegProcess.stdio[4] as any)
+
+      if (controller) {
+        controller.pause = () => {
+          audioStream.pause()
+          currentProgress.status = 'paused'
+          progressCallback?.(Object.assign({}, currentProgress))
+        }
+
+        controller.resume = () => {
+          audioStream.resume()
+          currentProgress.status = 'downloading'
+          progressCallback?.(Object.assign({}, currentProgress))
+        }
+
+        controller.stop = () => {
+          ffmpegProcess.kill()
+          audioStream.destroy()
+          currentProgress.status = 'stopped'
+          progressCallback?.(Object.assign({}, currentProgress))
+          reject(new Error('canceled by user'))
+        }
+      }
     } catch (err) {
       Object.assign(currentProgress, {
         status: 'failed',
         error: err.toString()
       })
-      progressCallback(Object.assign({}, currentProgress))
+      progressCallback?.(Object.assign({}, currentProgress))
       reject(err)
     }
   })
+}
+
+export async function download(params: DownloadParams): Promise<void> {
+  if (params.audioOnly) {
+    return await downloadAudio({ ...params })
+  } else {
+    return await downloadVideo({ ...params })
+  }
 }

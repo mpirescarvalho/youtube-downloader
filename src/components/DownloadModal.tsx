@@ -21,7 +21,7 @@ import ytdl, { videoFormat } from 'ytdl-core'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { filterBetterFormats } from '../utils'
-import { useDownload, useDownloadStatus } from '../contexts/download'
+import { useDownloader, useDownloadStatus } from '../contexts/download'
 import Progress from './Progress'
 
 interface DownloadModalProps {
@@ -39,7 +39,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   const loadingVideo = useRef<string | null>(null)
 
-  const download = useDownload()
+  const { download } = useDownloader()
   const downloadStatus = useDownloadStatus(video.id!)
 
   useEffect(() => {
