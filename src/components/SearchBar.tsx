@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react'
-import { HStack, Input, IconButton, BoxProps, Flex } from '@chakra-ui/react'
+import { HStack, Input, IconButton, BoxProps, Flex, useToast } from '@chakra-ui/react'
 import { Search2Icon } from '@chakra-ui/icons'
 import YouTube, { Video } from 'youtube-sr'
 
@@ -8,6 +8,7 @@ import { useVideos } from '../contexts/videos'
 const SearchBar: React.FC<BoxProps> = (props) => {
   const [query, setQuery] = useState('')
   const { videos, setVideos } = useVideos()
+  const toast = useToast()
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -15,13 +16,31 @@ const SearchBar: React.FC<BoxProps> = (props) => {
   }
 
   async function doSearch() {
-    if (query) {
-      setVideos({ ...videos, loading: true })
-      const results = await YouTube.search(query)
-      const videoResults = results.filter((result) => result instanceof Video)
-      setVideos({ data: videoResults as Video[], loading: false })
-    } else {
-      setVideos({ data: [], loading: false })
+    const newVideos: Video[] = []
+
+    try {
+      if (query) {
+        setVideos({ ...videos, loading: true })
+
+        if (YouTube.validate(query, 'VIDEO')) {
+          const video = await YouTube.getVideo(query)
+          newVideos.push(video)
+        } else {
+          const videos = await YouTube.search(query, { type: 'video' })
+          newVideos.push(...videos)
+        }
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'An error occurred while fetching your query, please try again',
+        status: 'error',
+        duration: 4000,
+        isClosable: true
+      })
+      console.error(err)
+    } finally {
+      setVideos({ data: newVideos, loading: false })
     }
   }
 

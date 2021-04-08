@@ -40,7 +40,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
         position="relative"
       >
         <Image
-          src={video.thumbnail.url!}
+          src={video.thumbnail?.url}
           fit="cover"
           width="100%"
           height="100%"
@@ -86,14 +86,14 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
 
           <Flex align="center" justify="start" direction="row" marginTop="4">
             <Avatar
-              name={video.channel.name!}
-              src={video.channel.icon.url!}
+              name={video.channel?.name}
+              src={video.channel?.icon.url}
               size="xs"
               colorScheme="red"
             />
 
             <Text fontSize="xs" color="gray.400" marginLeft="2">
-              {video.channel.name}
+              {video.channel?.name}
             </Text>
           </Flex>
 

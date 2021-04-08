@@ -90,7 +90,7 @@
     "svg-url-loader": "^6.0.0",
     "url-loader": "^4.1.1",
     "use-debounce": "^6.0.0",
-    "youtube-sr": "^2.0.1",
+    "youtube-sr": "^4.0.4",
     "ytdl-core": "^4.0.5"
   },
   "build": {

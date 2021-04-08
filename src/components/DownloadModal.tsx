@@ -63,7 +63,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
   async function loadFormats() {
     setFormats({ data: [], loading: true })
     try {
-      loadingVideo.current = video.id
+      loadingVideo.current = video.id!
       const data = await fetchVideoFormats(video.id!)
       if (loadingVideo.current === video.id) {
         setFormats({ data, loading: false })
@@ -101,7 +101,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
         <ModalBody>
           <Box position="relative">
             <Image
-              src={video.thumbnail.url!}
+              src={video.thumbnail?.url}
               fit="cover"
               bgColor="gray.300"
               borderRadius="md"
