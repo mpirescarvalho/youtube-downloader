@@ -163,7 +163,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
                 onClick={() => stop(video)}
                 colorScheme="red"
                 mr={3}
-                disabled={downloadStatus !== 'downloading'}
+                disabled={!['downloading', 'queue'].includes(downloadStatus)}
               >
                 Stop
               </Button>

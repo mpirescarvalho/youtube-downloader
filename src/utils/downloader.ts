@@ -6,7 +6,7 @@ import os from 'os'
 import cp from 'child_process'
 import ffmpegStatic from 'ffmpeg-static'
 import fs from 'fs'
-import { DownloadProgress } from '../contexts/download'
+import { DownloadProgress, DownloadStatus } from '../contexts/download'
 import DownloadAbortError from '../errors/DownloadAbortError'
 
 export class DownloadController {
@@ -235,10 +235,11 @@ function downloadVideo({
         }
 
         controller.stop = () => {
-          ffmpegProcess.kill('SIGINT')
           audioStream.destroy()
           videoStream.destroy()
+          ffmpegProcess.kill('SIGINT')
           currentProgress.status = 'stopped'
+          currentProgress.error = new DownloadAbortError().message
           progressCallback?.(Object.assign({}, currentProgress))
           clearFile(outputPath)
           reject(new DownloadAbortError())
@@ -398,12 +399,13 @@ async function downloadAudio({
         }
 
         controller.stop = () => {
-          ffmpegProcess.kill('SIGINT')
           audioStream.destroy()
+          ffmpegProcess.kill('SIGINT')
           currentProgress.status = 'stopped'
+          currentProgress.error = new DownloadAbortError().message
           progressCallback?.(Object.assign({}, currentProgress))
           clearFile(outputPath)
-          reject(new Error('canceled by user'))
+          reject(new DownloadAbortError())
         }
       }
     } catch (err) {
@@ -418,10 +420,107 @@ async function downloadAudio({
   })
 }
 
-export async function download(params: DownloadParams): Promise<void> {
+async function doDownload(params: DownloadParams) {
   if (params.audioOnly) {
     return await downloadAudio({ ...params })
   } else {
     return await downloadVideo({ ...params })
   }
+}
+
+type QueueItem = {
+  params: DownloadParams
+  status: DownloadStatus
+  order: number
+}
+
+const queue: Record<string, QueueItem> = {}
+
+function cleanupQueue() {
+  Object.keys(queue).forEach((key) => {
+    if (['finished', 'stopped', 'failed'].includes(queue[key].status)) {
+      delete queue[key]
+    }
+  })
+}
+
+async function checkQueue() {
+  cleanupQueue()
+
+  const downloading = Object.values(queue).filter(
+    (item) => item.status !== 'queue'
+  )
+
+  const enqueued = Object.values(queue)
+    .filter((item) => item.status === 'queue')
+    .sort((a, b) => a.order - b.order)
+
+  // 3 concurrent downloads is the maximum
+  if (downloading.length >= 3) {
+    return
+  }
+
+  // there's no downloads waiting
+  if (enqueued.length === 0) {
+    return
+  }
+
+  const nextDownload = enqueued.shift()!
+
+  queue[nextDownload!.params.video.id!].status = 'starting'
+  // eslint-disable-next-line handle-callback-err
+  doDownload(nextDownload.params).catch(() => {
+    // do nothing
+  })
+}
+
+setInterval(checkQueue, 150)
+
+export async function queueDownload(params: DownloadParams): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const internalCallback: typeof params.progressCallback = (progress) => {
+      params.progressCallback?.(progress)
+      if (queue[params.video.id!]) {
+        if (
+          !['finished', 'stopped', 'failed'].includes(
+            queue[params.video.id!].status
+          )
+        ) {
+          queue[params.video.id!].status = progress.status
+        }
+      }
+      if (progress.status === 'finished') {
+        resolve()
+      } else if (progress.status === 'stopped') {
+        reject(new DownloadAbortError())
+      } else if (progress.status === 'failed') {
+        reject(new Error(progress.error))
+      }
+    }
+
+    if (params.controller) {
+      params.controller.stop = () => {
+        queue[params.video.id!].status = 'stopped'
+        reject(new DownloadAbortError())
+      }
+    }
+
+    params.progressCallback?.({
+      status: 'queue',
+      percent: 0,
+      downloaded: 0,
+      total: 0,
+      time: 0,
+      timeLeft: 0
+    })
+
+    queue[params.video.id!] = {
+      order: Object.keys(queue).length + 1,
+      params: {
+        ...params,
+        progressCallback: internalCallback
+      },
+      status: 'queue'
+    }
+  })
 }

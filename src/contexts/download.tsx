@@ -4,10 +4,10 @@ import { Video } from 'youtube-sr'
 import { videoFormat } from 'ytdl-core'
 import produce from 'immer'
 
-import { download as executeDownload, DownloadController } from '../utils/downloader'
+import { queueDownload, DownloadController } from '../utils/downloader'
 import DownloadAbortError from '../errors/DownloadAbortError'
 
-export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed'
+export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed' | 'queue'
 
 export type DownloadProgress = {
   status: DownloadStatus
@@ -64,13 +64,13 @@ export const DownloaderProvider: React.FC = ({ children }) => {
         }
       })
 
-      if (['starting', 'paused', 'stopped', 'finished', 'failed'].includes(progress.status)) {
+      if (progress.status !== 'downloading') {
         updateDownloads.flush()
       }
     }
 
     try {
-      await executeDownload({
+      await queueDownload({
         video,
         format,
         controller,

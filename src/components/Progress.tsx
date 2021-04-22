@@ -1,6 +1,7 @@
 import { Flex, Text, Progress as ChakraProgress, BoxProps, Box } from '@chakra-ui/react'
 import React from 'react'
 import { useDownloadInfo } from '../contexts/download'
+import { capitalizeFirstLetter } from '../utils'
 
 type ProgressProps = {
   videoId: string
@@ -50,7 +51,7 @@ const Progress: React.FC<ProgressProps> = ({ videoId, ...props }) => {
           color="white"
           marginTop="2"
         >
-          <Text>Downloading</Text>
+          <Text>{capitalizeFirstLetter(status)}</Text>
           <Text>{percentage}%</Text>
         </Flex>
 

@@ -22,3 +22,7 @@ export function formatNumber(num: number): string {
   const digits = num > 999999 ? 1 : 0
   return formatNumberFloat(num, digits)
 }
+
+export function capitalizeFirstLetter(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
