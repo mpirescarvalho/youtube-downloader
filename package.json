@@ -91,7 +91,8 @@
     "url-loader": "^4.1.1",
     "use-debounce": "^6.0.0",
     "youtube-sr": "^4.0.4",
-    "ytdl-core": "^4.0.5"
+    "ytdl-core": "^4.0.5",
+    "ytpl": "^2.2.1"
   },
   "build": {
     "appId": "com.marcelo.electron.youtube.downloader",
