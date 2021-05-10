@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
-import { Video } from 'youtube-sr'
 
+import Video from '../types/Video'
 import LoadingState from '../types/LoadingState'
 import { useDownloadingVideos } from './download'
 

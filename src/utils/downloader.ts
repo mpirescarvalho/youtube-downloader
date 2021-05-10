@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ytdl, { downloadOptions, videoFormat } from 'ytdl-core'
-import { Video } from 'youtube-sr'
 import path from 'path'
 import os from 'os'
 import cp from 'child_process'
@@ -8,6 +7,7 @@ import ffmpegStatic from 'ffmpeg-static'
 import fs from 'fs'
 import { DownloadProgress, DownloadStatus } from '../contexts/download'
 import DownloadAbortError from '../errors/DownloadAbortError'
+import Video from '../types/Video'
 
 export class DownloadController {
   pause(): void {
@@ -130,14 +130,14 @@ function downloadVideo({
         options.quality = 'highestvideo'
       }
 
-      const videoStream = ytdl(video.url!, options).on(
+      const videoStream = ytdl(video.url, options).on(
         'progress',
         (_, downloaded, total) => {
           streamsTracker.video = { downloaded, total }
         }
       )
 
-      const audioStream = ytdl(video.url!, { quality: 'highestaudio' }).on(
+      const audioStream = ytdl(video.url, { quality: 'highestaudio' }).on(
         'progress',
         (_, downloaded, total) => {
           streamsTracker.audio = { downloaded, total }
@@ -310,7 +310,7 @@ async function downloadAudio({
         options.quality = 'highestaudio'
       }
 
-      const audioStream = ytdl(video.url!, options).on(
+      const audioStream = ytdl(video.url, options).on(
         'progress',
         (_, downloaded, total) => {
           currentProgress.downloaded = downloaded

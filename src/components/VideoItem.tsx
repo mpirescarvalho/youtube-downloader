@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React, { useState } from 'react'
 import { Flex, Image, Text, Avatar, Box } from '@chakra-ui/react'
-import { Video } from 'youtube-sr'
 import { DownloadIcon } from '@chakra-ui/icons'
 
 import { useDownloadModal } from '../contexts/downloadModal'
+import Video from '../types/Video'
 import { formatNumber } from '../utils'
 import Progress from './Progress'
 
@@ -40,7 +40,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
         position="relative"
       >
         <Image
-          src={video.thumbnail?.url}
+          src={video.thumbnailUrl}
           fit="cover"
           width="100%"
           height="100%"
@@ -86,8 +86,8 @@ const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
 
           <Flex align="center" justify="start" direction="row" marginTop="4">
             <Avatar
-              name={video.channel?.name}
-              src={video.channel?.icon.url}
+              name={video.channel.name}
+              src={video.channel.thumbnailUrl}
               size="xs"
               colorScheme="red"
             />

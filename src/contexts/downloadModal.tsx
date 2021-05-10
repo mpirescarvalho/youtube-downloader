@@ -1,7 +1,7 @@
 import { useDisclosure } from '@chakra-ui/react'
 import React, { useContext, createContext, useState } from 'react'
-import { Video } from 'youtube-sr'
 
+import Video from '../types/Video'
 import DownloadModal from '../components/DownloadModal'
 
 type DownloadModalData = {

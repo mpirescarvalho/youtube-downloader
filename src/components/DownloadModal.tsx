@@ -14,10 +14,10 @@ import {
   Icon,
   Flex
 } from '@chakra-ui/react'
-import { Video } from 'youtube-sr'
 import { FaDownload } from 'react-icons/fa'
 import { videoFormat } from 'ytdl-core'
 
+import Video from '../types/Video'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { fetchVideoFormats } from '../utils/formats'
@@ -101,7 +101,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
         <ModalBody>
           <Box position="relative">
             <Image
-              src={video.thumbnail?.url}
+              src={video.thumbnailUrl}
               fit="cover"
               bgColor="gray.300"
               borderRadius="md"

@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useCallback, useState, useMemo, useEffect, useRef } from 'react'
 import { useThrottledCallback } from 'use-debounce'
-import { Video } from 'youtube-sr'
 import { videoFormat } from 'ytdl-core'
 import produce from 'immer'
 
+import Video from '../types/Video'
 import { queueDownload, DownloadController } from '../utils/downloader'
 import DownloadAbortError from '../errors/DownloadAbortError'
 

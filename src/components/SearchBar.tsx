@@ -1,8 +1,9 @@
 import React, { FormEvent, useState } from 'react'
 import { HStack, Input, IconButton, BoxProps, Flex, useToast } from '@chakra-ui/react'
 import { Search2Icon } from '@chakra-ui/icons'
-import YouTube, { Video } from 'youtube-sr'
+import YouTube from 'youtube-sr'
 
+import Video from '../types/Video'
 import { useVideos } from '../contexts/videos'
 
 const SearchBar: React.FC<BoxProps> = (props) => {
@@ -23,10 +24,11 @@ const SearchBar: React.FC<BoxProps> = (props) => {
         setVideos({ ...videos, loading: true })
 
         if (YouTube.validate(query, 'VIDEO')) {
-          const video = await YouTube.getVideo(query)
+          const video = new Video(await YouTube.getVideo(query))
           newVideos.push(video)
         } else {
-          const videos = await YouTube.search(query, { type: 'video' })
+          const videos = (await YouTube.search(query, { type: 'video' }))
+            .map(video => new Video(video))
           newVideos.push(...videos)
         }
       }
