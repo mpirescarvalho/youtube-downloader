@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
 import * as url from 'url'
 import installExtension, {
@@ -32,8 +32,18 @@ function createWindow() {
     )
   }
 
-  mainWindow.on('closed', () => {
+  mainWindow.on('close', (e) => {
+    if (mainWindow) {
+      e.preventDefault()
+      mainWindow.webContents.send('app-close')
+    }
+  })
+
+  ipcMain.on('closed', () => {
     mainWindow = null
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
   })
 }
 

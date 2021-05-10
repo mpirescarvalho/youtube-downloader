@@ -10,6 +10,7 @@ import icon from './assets/icon.svg'
 import VideoList from './components/VideoList'
 import SearchBar from './components/SearchBar'
 import DownloadWatcher from './components/DownloadWatcher'
+import CloseModal from './components/CloseModal'
 
 import { DownloaderProvider } from './contexts/download'
 import { VideosProvider } from './contexts/videos'
@@ -29,42 +30,41 @@ const App = () => {
     <ChakraProvider theme={theme}>
       <DownloaderProvider>
         <VideosProvider>
-          <DownloadModalProvider>
-            <Scrollbars
-              id="scroll-container"
-              renderThumbVertical={(props) => (
-                <Box
-                  {...props}
-                  opacity="0.7"
-                  bgColor="red.500"
-                  borderRadius="8px"
-                  zIndex="10"
-                />
-              )}
-              renderView={(props) => (
-                <Flex
-                  direction="column"
-                  align="center"
-                  justify="start"
-                  minH="100%"
-                  background="gray.900"
-                  color="gray.100"
-                  overflowX="hidden"
-                  paddingBottom="8"
-                  {...props}
-                />
-              )}
-            >
-              <SearchBar
-                w="90%"
-                maxW="1000px"
-              />
+          <CloseModal>
+            <DownloadModalProvider>
+              <Scrollbars
+                id="scroll-container"
+                renderThumbVertical={(props) => (
+                  <Box
+                    {...props}
+                    opacity="0.7"
+                    bgColor="red.500"
+                    borderRadius="8px"
+                    zIndex="10"
+                  />
+                )}
+                renderView={(props) => (
+                  <Flex
+                    direction="column"
+                    align="center"
+                    justify="start"
+                    minH="100%"
+                    background="gray.900"
+                    color="gray.100"
+                    overflowX="hidden"
+                    paddingBottom="8"
+                    {...props}
+                  />
+                )}
+              >
+                <SearchBar w="90%" maxW="1000px" />
 
-              <VideoList width="90%" maxW="1000px" />
+                <VideoList width="90%" maxW="1000px" />
 
-              <DownloadWatcher />
-            </Scrollbars>
-          </DownloadModalProvider>
+                <DownloadWatcher />
+              </Scrollbars>
+            </DownloadModalProvider>
+          </CloseModal>
         </VideosProvider>
       </DownloaderProvider>
     </ChakraProvider>
