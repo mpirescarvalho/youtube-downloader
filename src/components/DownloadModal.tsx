@@ -33,6 +33,7 @@ interface DownloadModalProps {
 
 const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose }) => {
   const [selected, setSelected] = useState(0)
+  const [splitTracks, setSplitTracks] = useState(false)
   const [formats, setFormats] = useState<LoadingState<videoFormat[]>>({
     data: [],
     loading: false
@@ -81,7 +82,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   async function handleDownload() {
     try {
-      await download(video, formats.data[selected])
+      await download(video, formats.data[selected], splitTracks)
     } catch (err) {
       console.error(err)
     }
@@ -143,6 +144,8 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             formats={formats.data}
             selected={selected}
             setSelected={setSelected}
+            splitTracks={splitTracks}
+            onSplitTracksChange={setSplitTracks}
             isLoading={formats.loading}
             disabled={formats.loading || (downloadStatus !== null)}
           />

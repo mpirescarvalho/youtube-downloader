@@ -19,7 +19,7 @@ export type DownloadProgress = {
   timeLeft: number
 }
 
-export type DownloadFunction = (video: Video, format: videoFormat) => Promise<void>;
+export type DownloadFunction = (video: Video, format: videoFormat, splitAudio?: boolean) => Promise<void>;
 export type Download = {
   video: Video
   format: videoFormat
@@ -47,7 +47,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
     setDownloads(produce(updateFunc))
   }, 300, { leading: true, trailing: true })
 
-  const download: DownloadFunction = useCallback(async (video, format) => {
+  const download: DownloadFunction = useCallback(async (video, format, splitAudio) => {
     if (!video.id) {
       throw new Error('Invalid video id')
     }
@@ -74,6 +74,7 @@ export const DownloaderProvider: React.FC = ({ children }) => {
         video,
         format,
         controller,
+        splitAudio,
         progressCallback,
         audioOnly: !format.hasVideo
       })

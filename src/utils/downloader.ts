@@ -27,6 +27,7 @@ export type DownloadParams = {
   video: Video
   format?: videoFormat
   audioOnly?: boolean
+  splitAudio?: boolean
   controller?: DownloadController
   progressCallback?: (progress: DownloadProgress) => void
 }
@@ -69,7 +70,7 @@ function resolveOutputPath(filename: string, ext: string): string {
   return outputPath
 }
 
-function downloadVideo({
+async function downloadVideo({
   video,
   format,
   controller,
