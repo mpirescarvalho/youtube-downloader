@@ -30,8 +30,6 @@ Youtube Downloader is an electron based application that let's you easily browse
 | Choose format        | ✅     |
 | Choose download path | ⬛     |
 
-split a merged audio track
-
 ## Contributing
 
 1. Fork it (<https://github.com/mpirescarvalho/youtube-downloader/fork>)
