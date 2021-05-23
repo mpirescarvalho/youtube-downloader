@@ -17,14 +17,14 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
   onSplitTracksChange,
   ...props
 }) => {
-  const audioSelected = formats[props.selected] && !formats[props.selected].hasVideo
+  const audioSelected = !formats[props.selected]?.hasVideo
 
   function toggleSplitTracks() {
     onSplitTracksChange(!splitTracks)
   }
 
   useEffect(() => {
-    if (!audioSelected) {
+    if (audioSelected === false) {
       onSplitTracksChange(false)
     }
   }, [audioSelected])
@@ -53,9 +53,11 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
       {audioSelected && (
         <Checkbox
           checked={splitTracks}
+          defaultChecked={splitTracks}
           onChange={toggleSplitTracks}
           mt="2"
           colorScheme="red"
+          isDisabled={props.disabled}
         >
           <Text fontWeight="bold">Split tracks</Text>
         </Checkbox>

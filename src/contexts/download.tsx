@@ -24,6 +24,7 @@ export type Download = {
   video: Video
   format: videoFormat
   progress: DownloadProgress
+  splitTracks?: boolean
 }
 
 export type Downloads = Record<string, Download>
@@ -60,7 +61,8 @@ export const DownloaderProvider: React.FC = ({ children }) => {
         draft[video.id!] = {
           video,
           format,
-          progress
+          progress,
+          splitTracks: splitAudio
         }
       })
 
@@ -167,22 +169,25 @@ export function useDownloadStatus(videoId: string): DownloadStatus | null {
   return status.current
 }
 
-export function useDownloadFormat(videoId: string): videoFormat | null {
+export function useDownloadOptions(videoId: string): Omit<Download, 'video' | 'progress'> | null {
   const { downloads } = useContext(DownloaderContext)
-  const format = useRef<videoFormat | null>(null)
+  const options = useRef<Omit<Download, 'video' | 'progress'> | null>(null)
 
-  let newFormat: videoFormat | null = null
+  let newOptions: Omit<Download, 'video' | 'progress'> | null = null
   const download = downloads[videoId]
 
   if (download) {
-    newFormat = download.format
+    newOptions = {
+      format: download.format,
+      splitTracks: download.splitTracks
+    }
   }
 
-  if (newFormat !== format.current) {
-    format.current = newFormat
+  if (newOptions !== options.current) {
+    options.current = newOptions
   }
 
-  return format.current
+  return options.current
 }
 
 export function useDownloadingVideos(): Video[] {

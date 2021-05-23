@@ -21,7 +21,7 @@ import Video from '../types/Video'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { fetchVideoFormats } from '../utils/formats'
-import { useDownloader, useDownloadFormat, useDownloadStatus } from '../contexts/download'
+import { useDownloader, useDownloadStatus, useDownloadOptions } from '../contexts/download'
 import Progress from './Progress'
 import usePrevious from '../hooks/usePrevious'
 
@@ -31,6 +31,7 @@ interface DownloadModalProps {
   onClose: () => void
 }
 
+// TODO: too much rerendering
 const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose }) => {
   const [selected, setSelected] = useState(0)
   const [splitTracks, setSplitTracks] = useState(false)
@@ -44,17 +45,19 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
   const { download, stop } = useDownloader()
   const downloadStatus = useDownloadStatus(video.id!)
-  const downloadFormat = useDownloadFormat(video.id!)
+  const downloadOptions = useDownloadOptions(video.id!)
 
   useEffect(() => {
     const hasOpened = isOpen && !wasOpened
     if (hasOpened) {
       loadFormats()
-      if (!downloadFormat) {
+      if (!downloadOptions) {
+        setSplitTracks(false)
         setSelected(0)
       } else {
         fetchVideoFormats(video.id!).then((formats) => {
-          const index = formats.indexOf(downloadFormat)
+          const index = formats.indexOf(downloadOptions.format)
+          setSplitTracks(!!downloadOptions.splitTracks)
           setSelected(index)
         })
       }
