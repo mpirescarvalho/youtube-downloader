@@ -27,7 +27,7 @@ export type DownloadParams = {
   video: Video
   format?: videoFormat
   audioOnly?: boolean
-  splitAudio?: boolean
+  splitTracks?: boolean
   controller?: DownloadController
   progressCallback?: (progress: DownloadProgress) => void
 }

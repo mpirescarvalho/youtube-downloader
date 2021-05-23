@@ -26,9 +26,11 @@ Youtube Downloader is an electron based application that let's you easily browse
 | Download video       | ✅     |
 | Download playlist    | ⬛     |
 | Download audio       | ✅     |
-| Split audio into several tracks       | ⬛     |
+| Split audio into separated tracks       | ⬛     |
 | Choose format        | ✅     |
 | Choose download path | ⬛     |
+
+>splitting audio into tracks is made based on silence analysis.
 
 ## Contributing
 
