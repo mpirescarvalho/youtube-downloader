@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Flex, Text, Icon, Checkbox } from '@chakra-ui/react'
 import { FaVolumeUp, FaVideo } from 'react-icons/fa'
 
@@ -17,19 +17,18 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
   onSplitTracksChange,
   ...props
 }) => {
-  const audioSelected = !formats[props.selected]?.hasVideo
+  const selectedFormat = formats[props.selected]
+  const audioSelected = selectedFormat && !selectedFormat.hasVideo
 
   function toggleSplitTracks() {
     onSplitTracksChange(!splitTracks)
   }
 
   useEffect(() => {
-    if (audioSelected === false) {
+    if (selectedFormat && !audioSelected) {
       onSplitTracksChange(false)
     }
   }, [audioSelected])
-
-  // TODO: hide split tracks checkbox if formats is loading
 
   return (
     <Flex direction="column">
