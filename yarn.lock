@@ -3103,6 +3103,11 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
+audio-splitter@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/audio-splitter/-/audio-splitter-1.0.2.tgz#8c0d08d7ac891fdc7b9d3b021fab26a092af1cf0"
+  integrity sha512-+5S6nU7GilpxpHgUYrnWvi78IgtIS7m0yFo69K+3kTg/EW3P2cQcxe25BdA1XGyJtYbwMTnAnzWBis+F6nNvsA==
+
 aws-sign2@~0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/aws-sign2/-/aws-sign2-0.7.0.tgz#b46e890934a9591f2d2f6f86d7e6a9f1b3fe76a8"

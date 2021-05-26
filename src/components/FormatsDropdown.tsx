@@ -29,6 +29,8 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
     }
   }, [audioSelected])
 
+  // TODO: hide split tracks checkbox if formats is loading
+
   return (
     <Flex direction="column">
       <Dropdown

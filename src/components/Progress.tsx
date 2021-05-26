@@ -40,7 +40,7 @@ const Progress: React.FC<ProgressProps> = ({ videoId, ...props }) => {
           width="100%"
           colorScheme="green"
           borderRadius="2"
-          isIndeterminate={status === 'starting'}
+          isIndeterminate={['starting', 'processing'].includes(status)}
         />
 
         <Flex

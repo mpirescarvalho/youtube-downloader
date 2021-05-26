@@ -7,7 +7,7 @@ import Video from '../types/Video'
 import { queueDownload, DownloadController } from '../utils/downloader'
 import DownloadAbortError from '../errors/DownloadAbortError'
 
-export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed' | 'queue'
+export type DownloadStatus = 'starting' | 'downloading' | 'paused' | 'stopped' | 'finished' | 'failed' | 'queue' | 'processing'
 
 export type DownloadProgress = {
   status: DownloadStatus

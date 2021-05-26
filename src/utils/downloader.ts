@@ -8,6 +8,7 @@ import fs from 'fs'
 import { DownloadProgress, DownloadStatus } from '../contexts/download'
 import DownloadAbortError from '../errors/DownloadAbortError'
 import Video from '../types/Video'
+import * as AudioSplitter from 'audio-splitter'
 
 export class DownloadController {
   pause(): void {
@@ -50,7 +51,7 @@ async function clearFile(filename: string) {
   }
 }
 
-function resolveOutputPath(filename: string, ext: string): string {
+function resolveOutputPath(filename: string, ext?: string): string {
   let count = 0
   const getSuffix = () => {
     count++
@@ -61,13 +62,16 @@ function resolveOutputPath(filename: string, ext: string): string {
     }
   }
   const getOutPath = () =>
-    path.resolve(outputDir, `${filename}${getSuffix()}.${ext}`)
+    path.resolve(outputDir, `${filename}${getSuffix()}${ext ? `.${ext}` : '/'}`)
   const outputDir = path.join(os.homedir(), 'Downloads')
   let outputPath = ''
   do {
     outputPath = getOutPath()
   } while (fs.existsSync(outputPath))
-  return outputPath
+  if (!ext) {
+    fs.mkdirSync(outputPath)
+  }
+  return outputPath + (ext ? '' : '/')
 }
 
 async function downloadVideo({
@@ -262,6 +266,7 @@ async function downloadAudio({
   video,
   format,
   controller,
+  splitTracks,
   progressCallback
 }: Omit<DownloadParams, 'audioOnly'>): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -284,16 +289,17 @@ async function downloadAudio({
       const startTime = Date.now()
 
       const triggerProgress = () => {
-        const { downloaded, total } = currentProgress
+        const { downloaded, total, status } = currentProgress
+        if (['finished', 'processing', 'failed', 'stopped'].includes(status)) {
+          return
+        }
         const percent = downloaded / total
         const downloadedSeconds = (Date.now() - startTime) / 1000
         const estimatedDownloadTime =
           downloadedSeconds / percent - downloadedSeconds
 
-        const status = percent === 1 ? 'finished' : 'downloading'
-
         Object.assign(currentProgress, {
-          status,
+          status: 'downloading',
           percent,
           downloaded,
           total,
@@ -362,6 +368,53 @@ async function downloadAudio({
 
       ffmpegProcess.on('close', (statusCode) => {
         if (statusCode === 0) {
+          if (splitTracks) {
+            if (controller) {
+              controller.pause = () => {
+                // remove pause action
+              }
+              controller.stop = () => {
+                // remove stop action
+              }
+              controller.resume = () => {
+                // remove resume action
+              }
+            }
+
+            Object.assign(currentProgress, {
+              status: 'processing',
+              percent: 1,
+              downloaded: currentProgress.total
+            })
+            progressCallback?.(Object.assign({}, currentProgress))
+
+            const pathFile = path.parse(outputPath)
+            pathFile.name = pathFile.name + '-temp'
+            pathFile.base = pathFile.name + pathFile.ext
+            const tempOutputPath = path.format(pathFile)
+
+            const outputDir = resolveOutputPath(video.title)
+
+            try {
+              fs.renameSync(outputPath, tempOutputPath)
+
+              AudioSplitter.splitAudio({
+                ffmpegPath: FFMPEG_PATH,
+                mergedTrack: tempOutputPath,
+                outputDir: outputDir,
+                minSilenceLength: 0.01,
+                maxNoiseLevel: -40,
+                minSongLength: 40
+              })
+            } catch (err) {
+              fs.rmdirSync(outputDir)
+              return triggerError(err)
+            } finally {
+              clearFile(outputPath)
+              clearFile(tempOutputPath)
+            }
+          }
+
           Object.assign(currentProgress, {
             status: 'finished',
             percent: 1,
