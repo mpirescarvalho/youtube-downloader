@@ -366,7 +366,7 @@ async function downloadAudio({
         triggerProgress()
       })
 
-      ffmpegProcess.on('close', (statusCode) => {
+      ffmpegProcess.on('close', async (statusCode) => {
         if (statusCode === 0) {
           if (splitTracks) {
             if (controller) {
@@ -398,7 +398,7 @@ async function downloadAudio({
             try {
               fs.renameSync(outputPath, tempOutputPath)
 
-              AudioSplitter.splitAudio({
+              await AudioSplitter.splitAudio({
                 ffmpegPath: FFMPEG_PATH,
                 mergedTrack: tempOutputPath,
                 outputDir: outputDir,
