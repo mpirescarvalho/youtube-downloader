@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Flex, Text, Icon, Checkbox } from '@chakra-ui/react'
+import { Flex, Text, Icon, Checkbox, Tooltip } from '@chakra-ui/react'
 import { FaVolumeUp, FaVideo } from 'react-icons/fa'
 
 import Dropdown, { DropdownProps } from './Dropdown'
@@ -60,7 +60,9 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
           colorScheme="red"
           isDisabled={props.disabled}
         >
-          <Text fontWeight="bold">Split tracks</Text>
+          <Tooltip label="Split the audio into separated tracks based on silence analysis">
+            <Text fontWeight="bold">Split tracks (Beta)</Text>
+          </Tooltip>
         </Checkbox>
       )}
     </Flex>
