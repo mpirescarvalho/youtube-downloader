@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack');
 
 const rootPath = path.resolve(__dirname, '..')
 
@@ -59,6 +60,9 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(rootPath, 'index.html'),
+    }),
+    new webpack.DefinePlugin({
+      'process.env.FLUENTFFMPEG_COV': false
     }),
   ]
 }
