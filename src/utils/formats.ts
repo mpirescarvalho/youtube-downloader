@@ -14,15 +14,23 @@ export function filterBetterFormats(formats: videoFormat[]): videoFormat[] {
     formats,
     (format) =>
       format.hasVideo && !format.hasAudio && format.container === 'mp4'
-  ).filter((format) => {
-    if (!formatsPushed.includes(format.qualityLabel)) {
-      formatsPushed.push(format.qualityLabel)
-      return true
-    }
-    return false
-  })
+  )
+    .filter((format) => {
+      if (!formatsPushed.includes(format.qualityLabel)) {
+        formatsPushed.push(format.qualityLabel)
+        return true
+      }
+      return false
+    })
+    .map((format) => {
+      const formatWithExtension = {
+        ...format,
+        extension: format.container
+      } as videoFormat
+      return formatWithExtension
+    })
   if (audioTrack) {
-    audioTrack.container = 'mp3' as any
+    audioTrack.extension = 'mp3'
     result.push(audioTrack)
   }
   return result

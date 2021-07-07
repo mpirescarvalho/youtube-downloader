@@ -26,3 +26,23 @@ export function formatNumber(num: number): string {
 export function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
+
+export function formatTimeLeft(secondsLeft: number): string {
+  return new Date(1000 * secondsLeft).toISOString().substr(11, 8)
+}
+
+export function formatBytes(bytes: number | string, decimals = 2): string {
+  if (typeof bytes === 'string') {
+    bytes = parseInt(bytes)
+  }
+
+  if (bytes === 0) return '0 Bytes'
+
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}

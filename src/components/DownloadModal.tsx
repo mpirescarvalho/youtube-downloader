@@ -21,7 +21,11 @@ import Video from '../types/Video'
 import FormatsDropdown from './FormatsDropdown'
 import LoadingState from '../types/LoadingState'
 import { fetchVideoFormats } from '../utils/formats'
-import { useDownloader, useDownloadStatus, useDownloadOptions } from '../contexts/download'
+import {
+  useDownloader,
+  useDownloadStatus,
+  useDownloadOptions
+} from '../contexts/download'
 import Progress from './Progress'
 import usePrevious from '../hooks/usePrevious'
 
@@ -32,7 +36,11 @@ interface DownloadModalProps {
 }
 
 // TODO: too much rerendering
-const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose }) => {
+const DownloadModal: React.FC<DownloadModalProps> = ({
+  video,
+  isOpen,
+  onClose
+}) => {
   const [selected, setSelected] = useState(0)
   const [splitTracks, setSplitTracks] = useState(false)
   const [formats, setFormats] = useState<LoadingState<videoFormat[]>>({
@@ -92,7 +100,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isCentered size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} isCentered size="xl">
       <ModalOverlay />
       <ModalContent background="gray.900" color="gray.100">
         <ModalHeader>
@@ -106,6 +114,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
           <Box position="relative">
             <Image
               src={video.thumbnailUrl}
+              w="100%"
               fit="cover"
               bgColor="gray.300"
               borderRadius="md"
@@ -128,7 +137,8 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
 
           <Text
             flex="1"
-            isTruncated noOfLines={1}
+            isTruncated
+            noOfLines={1}
             fontWeight="bold"
             marginTop="2"
             textAlign="center"
@@ -136,10 +146,7 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             {video.title}
           </Text>
 
-          <Progress
-            videoId={video.id!}
-            marginTop="2"
-          />
+          <Progress videoId={video.id!} marginTop="2" />
         </ModalBody>
 
         <ModalFooter justifyContent="space-between">
@@ -150,11 +157,11 @@ const DownloadModal: React.FC<DownloadModalProps> = ({ video, isOpen, onClose })
             splitTracks={splitTracks}
             onSplitTracksChange={setSplitTracks}
             isLoading={formats.loading}
-            disabled={formats.loading || (downloadStatus !== null)}
+            disabled={formats.loading || downloadStatus !== null}
           />
 
           <div>
-            {!downloadStatus || (downloadStatus === 'starting') ? (
+            {!downloadStatus || downloadStatus === 'starting' ? (
               <Button
                 onClick={handleDownload}
                 colorScheme="red"

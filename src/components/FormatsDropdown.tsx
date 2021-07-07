@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Flex, Text, Icon, Checkbox, Tooltip } from '@chakra-ui/react'
 import { FaVolumeUp, FaVideo } from 'react-icons/fa'
+import { videoFormat } from 'ytdl-core'
 
 import Dropdown, { DropdownProps } from './Dropdown'
-import { videoFormat } from 'ytdl-core'
+import { formatBytes } from '../utils'
 
 type FormatsDropdownProps = {
   formats: videoFormat[]
@@ -20,6 +21,27 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
   const selectedFormat = formats[props.selected]
   const audioSelected = selectedFormat && !selectedFormat.hasVideo
 
+  const formatsWithRealSize = useMemo(() => {
+    const audioTrack = formats.find((format) => format.extension === 'mp3')
+    return formats.map((format) => {
+      if (
+        !audioTrack ||
+        !audioTrack.contentLength ||
+        !format.contentLength ||
+        format === audioTrack
+      ) {
+        return format
+      } else {
+        return {
+          ...format,
+          contentLength: (
+            parseInt(format.contentLength) + parseInt(audioTrack.contentLength)
+          ).toString()
+        } as videoFormat
+      }
+    })
+  }, [formats])
+
   function toggleSplitTracks() {
     onSplitTracksChange(!splitTracks)
   }
@@ -33,20 +55,33 @@ const FormatsDropdown: React.FC<FormatsDropdownProps> = ({
   return (
     <Flex direction="column">
       <Dropdown
-        w="180px"
+        w="280px"
         paddingX="16px"
         colorScheme="red"
         variant="responsive"
         {...props}
       >
         {formats.map((format, index) => (
-          <Flex key={index} w="148px" direction="row" justify="space-between" align="center">
-            <Text>{format.container.toUpperCase()}{format.qualityLabel && ` • ${format.qualityLabel}`}</Text>
-            <div>
-              {format.hasVideo
-                ? <Icon as={FaVideo} marginRight="2" />
-                : <Icon as={FaVolumeUp} marginRight="2" />}
-            </div>
+          <Flex key={index} w="248px" direction="row" align="center">
+            <Flex flex="1" align="center" justify="space-between">
+              <Text>{format.extension.toUpperCase()}</Text>
+              <Text>{format.qualityLabel}</Text>
+            </Flex>
+
+            <Flex flex="1" align="center" justify="flex-end">
+              <Text>
+                {formatsWithRealSize[index].contentLength &&
+                  formatBytes(formatsWithRealSize[index].contentLength)}
+              </Text>
+            </Flex>
+
+            <Flex align="center" justify="flex-end">
+              {format.hasVideo ? (
+                <Icon as={FaVideo} marginRight="2" marginLeft="8" />
+              ) : (
+                <Icon as={FaVolumeUp} marginRight="2" marginLeft="8" />
+              )}
+            </Flex>
           </Flex>
         ))}
       </Dropdown>
